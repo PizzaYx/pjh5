@@ -1,0 +1,242 @@
+// 通用样式类
+@use './variables.scss' as *;
+
+// 布局
+.flex {
+  display: flex;
+
+  &-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &-around {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+  }
+
+  &-column {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &-wrap {
+    flex-wrap: wrap;
+  }
+}
+
+// 文本对齐
+.text {
+  &-left {
+    text-align: left;
+  }
+
+  &-center {
+    text-align: center;
+  }
+
+  &-right {
+    text-align: right;
+  }
+
+  &-ellipsis {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &-ellipsis-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &-ellipsis-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+// 边距
+@for $i from 0 through 10 {
+  .m-#{$i * 5} {
+    margin: #{$i * 5}px;
+  }
+
+  .mt-#{$i * 5} {
+    margin-top: #{$i * 5}px;
+  }
+
+  .mb-#{$i * 5} {
+    margin-bottom: #{$i * 5}px;
+  }
+
+  .ml-#{$i * 5} {
+    margin-left: #{$i * 5}px;
+  }
+
+  .mr-#{$i * 5} {
+    margin-right: #{$i * 5}px;
+  }
+
+  .p-#{$i * 5} {
+    padding: #{$i * 5}px;
+  }
+
+  .pt-#{$i * 5} {
+    padding-top: #{$i * 5}px;
+  }
+
+  .pb-#{$i * 5} {
+    padding-bottom: #{$i * 5}px;
+  }
+
+  .pl-#{$i * 5} {
+    padding-left: #{$i * 5}px;
+  }
+
+  .pr-#{$i * 5} {
+    padding-right: #{$i * 5}px;
+  }
+}
+
+// 字体大小
+@for $i from 12 through 30 {
+  .fs-#{$i} {
+    font-size: #{$i}px;
+  }
+}
+
+// 字体粗细
+.fw {
+  &-normal {
+    font-weight: normal;
+  }
+
+  &-bold {
+    font-weight: bold;
+  }
+}
+
+// 颜色
+.text-primary {
+  color: $primary-color;
+}
+
+.text-success {
+  color: $success-color;
+}
+
+.text-warning {
+  color: $warning-color;
+}
+
+.text-danger {
+  color: $danger-color;
+}
+
+.text-gray {
+  color: $text-color-secondary;
+}
+
+// 背景色
+.bg-primary {
+  background-color: $primary-color;
+}
+
+.bg-success {
+  background-color: $success-color;
+}
+
+.bg-warning {
+  background-color: $warning-color;
+}
+
+.bg-danger {
+  background-color: $danger-color;
+}
+
+.bg-white {
+  background-color: #fff;
+}
+
+.bg-gray {
+  background-color: $background-color;
+}
+
+// 宽高
+.w-full {
+  width: 100%;
+}
+
+.h-full {
+  height: 100%;
+}
+
+// 圆角
+.rounded {
+  border-radius: $border-radius-md;
+
+  &-sm {
+    border-radius: $border-radius-sm;
+  }
+
+  &-lg {
+    border-radius: $border-radius-lg;
+  }
+
+  &-xl {
+    border-radius: $border-radius-xl;
+  }
+
+  &-full {
+    border-radius: 9999px;
+  }
+}
+
+// 阴影
+.shadow {
+  box-shadow: $box-shadow-sm;
+
+  &-md {
+    box-shadow: $box-shadow-md;
+  }
+
+  &-lg {
+    box-shadow: $box-shadow-lg;
+  }
+}
+
+// 滚动
+.scroll-y {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+// 隐藏滚动条
+.hide-scrollbar {
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  scrollbar-width: none;
+}
+

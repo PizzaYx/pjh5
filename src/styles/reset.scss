@@ -1,0 +1,127 @@
+// CSS Reset
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  font-size: 14px;
+  color: #333;
+  background-color: #f7f8fa;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+input,
+textarea,
+button {
+  font-family: inherit;
+  font-size: inherit;
+  border: none;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+button {
+  cursor: pointer;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+// 禁用长按选择
+body {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+// 允许输入框选择
+input,
+textarea {
+  -webkit-user-select: auto;
+  user-select: auto;
+}
+
+// 1px 边框解决方案
+.hairline,
+.hairline-top,
+.hairline-bottom,
+.hairline-left,
+.hairline-right {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    pointer-events: none;
+    box-sizing: border-box;
+    border: 0 solid #ebedf0;
+  }
+}
+
+.hairline::after {
+  top: -50%;
+  right: -50%;
+  bottom: -50%;
+  left: -50%;
+  border-width: 1px;
+  transform: scale(0.5);
+}
+
+.hairline-top::after {
+  top: 0;
+  left: 0;
+  right: 0;
+  border-top-width: 1px;
+  transform: scaleY(0.5);
+}
+
+.hairline-bottom::after {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-bottom-width: 1px;
+  transform: scaleY(0.5);
+}
+
+.hairline-left::after {
+  top: 0;
+  left: 0;
+  bottom: 0;
+  border-left-width: 1px;
+  transform: scaleX(0.5);
+}
+
+.hairline-right::after {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  border-right-width: 1px;
+  transform: scaleX(0.5);
+}
+
