@@ -3,14 +3,26 @@
 
         <!-- 1. 顶部轮播图 -->
         <div class="banner-wrapper">
-            <van-swipe class="my-swipe" :autoplay="3000" :show-indicators="false" @change="onBannerChange">
+            <!-- 加载中 -->
+            <div v-if="loading" class="banner-loading">
+                <van-loading type="spinner" color="#fff">加载中...</van-loading>
+            </div>
+
+            <!-- 轮播图 -->
+            <van-swipe v-else-if="banners.length > 0" class="my-swipe" :autoplay="3000" :show-indicators="false"
+                @change="onBannerChange">
                 <van-swipe-item v-for="item in banners" :key="item.id">
-                    <img :src="item.img" alt="banner" class="banner-img" />
+                    <img :src="item.imgpath1" :alt="item.title" class="banner-img" />
                 </van-swipe-item>
             </van-swipe>
 
+            <!-- 空状态 -->
+            <div v-else class="banner-empty">
+                <van-empty description="暂无轮播图" />
+            </div>
+
             <!-- 自定义数字指示器 -->
-            <div class="custom-indicator">
+            <div v-if="banners.length > 0" class="custom-indicator">
                 {{ bannerIndicatorText }}
             </div>
         </div>
@@ -19,13 +31,22 @@
         <div class="content-card">
             <!-- 2. 金刚区导航 -->
             <div class="nav-section">
-                <div class="nav-item" v-for="item in menus" :key="item.id" @click="handleDetail(item.id)">
-                    <!-- 实际项目中把 van-icon 换成 <img :src="item.icon" /> -->
-                    <div class="icon-box">
-                        <van-icon :name="item.icon" size="28" color="#8B4513" />
-                    </div>
-                    <span class="nav-name">{{ item.name }}</span>
+                <!-- 加载中 -->
+                <div v-if="navLoading" class="nav-loading">
+                    <van-loading size="20">加载中...</van-loading>
                 </div>
+
+                <!-- 导航图标 -->
+                <div v-else-if="navModules.length > 0" class="nav-item" v-for="item in navModules" :key="item.id"
+                    @click="handleBtn(item.id, item.title)">
+                    <div class="icon-box">
+                        <img :src="item.img" :alt="item.title" class="nav-icon" />
+                    </div>
+                    <span class="nav-name">{{ item.title }}</span>
+                </div>
+
+                <!-- 空状态 -->
+                <div v-else class="nav-empty">暂无导航</div>
             </div>
 
             <!-- 3. 非遗项目 -->
@@ -34,12 +55,16 @@
                     <h3 class="title">非遗项目</h3>
                     <span class="more" @click="handleMore('非遗项目')">全部 <van-icon name="arrow" /></span>
                 </div>
-                <div class="project-grid">
-                    <div class="project-card" v-for="item in projects" :key="item.id"
-                        :style="{ backgroundColor: item.color }">
-                        <span class="card-text">{{ item.name }}</span>
-                        <!-- 装饰图标 -->
-                        <van-icon :name="item.img" class="card-icon" />
+
+                <div v-if="projectLoading" class="loading-box">
+                    <van-loading size="24px">加载中...</van-loading>
+                </div>
+
+                <div v-else class="project-grid">
+                    <div class="project-card" v-for="item in projects" :key="item.id" @click="handleDetail(item.id)">
+                        <!-- 使用 img1 作为背景图或直接显示 -->
+                        <img :src="item.img1" :alt="item.title" class="card-bg" />
+                        <span class="card-text">{{ item.title }}</span>
                     </div>
                 </div>
             </div>
@@ -48,13 +73,18 @@
             <div class="section">
                 <div class="section-header">
                     <h3 class="title">非遗传承人</h3>
-                    <span class="more" @click="handleMore('传承人')">全部 <van-icon name="arrow" /></span>
+                    <span class="more" @click="handleMore('非遗传承人')">全部 <van-icon name="arrow" /></span>
                 </div>
-                <div class="scroll-container">
+
+                <div v-if="inheritorLoading" class="loading-box">
+                    <van-loading size="24px">加载中...</van-loading>
+                </div>
+
+                <div v-else class="scroll-container">
                     <div class="inheritor-card" v-for="item in inheritors" :key="item.id">
                         <img :src="item.img" class="inheritor-img" />
                         <div class="overlay">
-                            <span>{{ item.title }} {{ item.name }}</span>
+                            <span>{{ item.title }}</span>
                         </div>
                     </div>
                 </div>
@@ -66,10 +96,16 @@
                     <h3 class="title">网上展厅</h3>
                     <span class="more" @click="handleMore('网上展厅')">全部 <van-icon name="arrow" /></span>
                 </div>
-                <div class="exhibition-grid">
+
+                <div v-if="exhibitionLoading" class="loading-box">
+                    <van-loading size="24px">加载中...</van-loading>
+                </div>
+
+                <div v-else class="exhibition-grid">
                     <div class="exhibit-card" v-for="item in exhibitions" :key="item.id">
-                        <span class="exhibit-name">{{ item.name }}</span>
-                        <van-icon :name="item.img" size="40" color="#8B4513" style="opacity: 0.6;" />
+                        <span class="exhibit-name">{{ item.title }}</span>
+                        <!-- 使用图片 -->
+                        <img :src="item.img1" class="exhibit-img" />
                     </div>
                 </div>
             </div>
@@ -80,10 +116,15 @@
                     <h3 class="title">非遗动态</h3>
                     <span class="more" @click="handleMore('非遗动态')">全部 <van-icon name="arrow" /></span>
                 </div>
-                <div class="news-list">
+
+                <div v-if="newsLoading" class="loading-box">
+                    <van-loading size="24px">加载中...</van-loading>
+                </div>
+
+                <div v-else class="news-list">
                     <div class="news-card" v-for="item in newsList" :key="item.id">
                         <div class="news-img-box">
-                            <img :src="item.img" />
+                            <img :src="item.img" loading="lazy" />
                         </div>
                         <div class="news-info">
                             <p class="news-title van-multi-ellipsis--l2">{{ item.title }}</p>
@@ -104,70 +145,49 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { showToast } from 'vant';
+import api, { type NavModuleItem, type ProjectItem, type InheritorItem, type ExhibitionItem, type NewsItem } from '../api/index';
+import { PlateArticleList } from '@/models';
+
+const router = useRouter();
 
 // --- 类型定义 (TypeScript) ---
-interface BannerItem { id: number; img: string; title: string; }
-interface MenuItem { id: number; name: string; icon: string; }
-interface ProjectItem { id: number; name: string; img: string; color: string; }
-interface InheritorItem { id: number; name: string; title: string; img: string; }
-interface ExhibitionItem { id: number; name: string; img: string; type: string; }
-interface NewsItem { id: number; title: string; date: string; img: string; }
+// 注：NavModuleItem、ProjectItem、InheritorItem、ExhibitionItem、NewsItem 使用从 api 导入的类型
 
-// --- 模拟数据 (Mock Data) ---
+// --- 数据定义 ---
 
-// 1. 顶部轮播图数据
-const banners: BannerItem[] = [
-    { id: 1, img: 'https://bpic.51yuansu.com/backgd/cover/00/09/67/5b7228b61c32c.jpg?x-oss-process=image/resize,h_300,m_lfit/sharpen,100', title: '非遗文化节' },
-    { id: 2, img: 'https://pic.rmb.bdstatic.com/bjh/news/a8365fc6d4f3e633053df2022b010f42.png', title: '博大精深' },
-];
+// 1. 顶部轮播图数据（从后台获取）
+const banners = ref<PlateArticleList[]>([]);
+const loading = ref(true);
 
-// 2. 金刚区导航图标 (建议换成你切好的 SVG 或 PNG)
-const menus: MenuItem[] = [
-    { id: 1, name: '非遗项目', icon: 'gem-o' }, // 暂时用 Vant 图标代替，实际请用 <img src="...">
-    { id: 2, name: '非遗传承人', icon: 'user-o' },
-    { id: 3, name: '网上展厅', icon: 'tv-o' },
-    { id: 4, name: '非遗动态', icon: 'newspaper-o' },
-];
+// 2. 金刚区导航图标（从后台获取）
+const navModules = ref<NavModuleItem[]>([]);
+const navLoading = ref(true);
 
-// 3. 非遗项目 (四色卡片)
-const projects: ProjectItem[] = [
-    { id: 1, name: '曲艺', img: 'music', color: '#8E6E73' },     // 紫色调
-    { id: 2, name: '传统体育', img: 'fire', color: '#C5A97D' },  // 金色调
-    { id: 3, name: '传统美术', img: 'brush', color: '#BC786D' }, // 红色调
-    { id: 4, name: '传统技艺', img: 'star', color: '#9DA268' },  // 绿色调
-];
+// 3. 非遗项目（从后台获取）
+const projects = ref<ProjectItem[]>([]);
+const projectLoading = ref(true);
 
 // 4. 传承人 (横向滚动)
-const inheritors: InheritorItem[] = [
-    { id: 1, name: '张三', title: '木雕传承人', img: 'https://via.placeholder.com/300x200/333/fff?text=木雕' },
-    { id: 2, name: '李四', title: '竹编传承人', img: 'https://via.placeholder.com/300x200/444/fff?text=竹编' },
-    { id: 3, name: '王五', title: '剪纸传承人', img: 'https://via.placeholder.com/300x200/555/fff?text=剪纸' },
-];
+const inheritors = ref<InheritorItem[]>([]);
+const inheritorLoading = ref(true);
 
 // 5. 网上展厅 (2x2)
-const exhibitions: ExhibitionItem[] = [
-    { id: 1, name: '相册', type: 'album', img: 'photo-o' },
-    { id: 2, name: '视频', type: 'video', img: 'play-circle-o' },
-    { id: 3, name: '音乐', type: 'music', img: 'music-o' },
-    { id: 4, name: '展览', type: 'exhibit', img: 'hotel-o' },
-];
+const exhibitions = ref<ExhibitionItem[]>([]);
+const exhibitionLoading = ref(true);
 
 // 6. 非遗动态 (瀑布流)
-const newsList: NewsItem[] = [
-    { id: 1, title: '第六批省级非物质文化遗产...', date: '2025.11.20', img: 'https://via.placeholder.com/300x200/cba/fff' },
-    { id: 2, title: '吹糖人技艺展示...', date: '2025.11.20', img: 'https://via.placeholder.com/300x200/abc/fff' },
-    { id: 3, title: '川剧变脸艺术...', date: '2025.11.20', img: 'https://via.placeholder.com/300x200/f00/fff' },
-    { id: 4, title: '竹编工艺流程...', date: '2025.11.20', img: 'https://via.placeholder.com/300x200/0f0/fff' },
-];
+const newsList = ref<NewsItem[]>([]);
+const newsLoading = ref(true);
 
 // 轮播图当前索引
 const currentBanner = ref(0);
 
 // 计算当前页码显示文本
 const bannerIndicatorText = computed(() => {
-    return `${currentBanner.value + 1}/${banners.length}`;
+    return `${currentBanner.value + 1}/${banners.value.length}`;
 });
 
 // 轮播图切换事件
@@ -176,8 +196,150 @@ const onBannerChange = (index: number) => {
 };
 
 // 点击事件
-const handleMore = (section: string) => showToast(`查看更多: ${section}`);
-const handleDetail = (id: number) => showToast(`查看详情 ID: ${id}`);
+const handleMore = (section: string) => {
+
+    if (section === '非遗项目') {
+        router.push('/project-list');
+    } else if (section === '网上展厅') {
+        router.push('/exhibition-list');
+    } else if (section === '非遗传承人') {
+        router.push('/inheritor-list');
+    } else if (section === '非遗动态') {
+        router.push('/news-list');
+    }
+};
+const handleBtn = (id: string | number, section: string) => {
+
+    if (section === '非遗项目') {
+        router.push('/project-list');
+    } else if (section === '网上展厅') {
+        router.push('/exhibition-list');
+    } else if (section === '非遗传承人') {
+        router.push('/inheritor-list');
+    } else if (section === '非遗动态') {
+        router.push('/news-list');
+    }
+};
+
+const handleDetail = (id: string | number) => {
+    router.push('/intangible-heritage-list');
+}
+
+// --- API 调用（Java 标准格式，拦截器自动处理 NocoDB 转换） ---
+
+// 获取 Banner 数据
+const fetchBanners = async () => {
+    try {
+        loading.value = true;
+        const response = await api.banner.getBannerList();
+
+
+        if (response.code === 1200 && response.data && response.data.length > 0) {
+            banners.value = response.data;
+            console.log('Banner 数据:', response.data);
+        }
+    } catch (error) {
+        console.error('获取 Banner 失败:', error);
+        showToast('获取轮播图失败');
+    } finally {
+        loading.value = false;
+    }
+};
+
+
+// 获取导航模块数据
+const fetchNavModules = async () => {
+    try {
+        navLoading.value = true;
+        const response = await api.navModule.getNavModuleList();
+
+        if (response.code === 200 && response.data && response.data.length > 0) {
+            navModules.value = response.data;
+            console.log('导航模块数据:', response.data);
+        }
+    } catch (error) {
+        console.error('获取导航模块失败:', error);
+        showToast('获取导航失败');
+    } finally {
+        navLoading.value = false;
+    }
+};
+
+// 获取非遗项目
+const fetchProjects = async () => {
+    try {
+        projectLoading.value = true;
+        // 获取第一页，backend 取前4个
+        const response = await api.project.getProjectList(1, 4);
+
+        if (response.code === 200 && response.data) {
+            // 只取前4个展示在首页
+            projects.value = response.data.list.slice(0, 4);
+        }
+    } catch (error) {
+        console.error('获取非遗项目失败:', error);
+    } finally {
+        projectLoading.value = false;
+    }
+};
+
+// 获取非遗传承人
+const fetchInheritors = async () => {
+    try {
+        inheritorLoading.value = true;
+        // 获取第一页
+        const response = await api.inheritor.getInheritorList(1, 10);
+        if (response.code === 200 && response.data) {
+            inheritors.value = response.data.list;
+        }
+    } catch (error) {
+        console.error('获取非遗传承人失败:', error);
+    } finally {
+        inheritorLoading.value = false;
+    }
+};
+
+// 获取网上展厅
+const fetchExhibitions = async () => {
+    try {
+        exhibitionLoading.value = true;
+        // 获取第一页，只取前4个
+        const response = await api.exhibition.getExhibitionList(1, 4);
+        if (response.code === 200 && response.data) {
+            exhibitions.value = response.data.list.slice(0, 4);
+        }
+    } catch (error) {
+        console.error('获取网上展厅失败:', error);
+    } finally {
+        exhibitionLoading.value = false;
+    }
+};
+
+// 获取非遗动态
+const fetchNews = async () => {
+    try {
+        newsLoading.value = true;
+        // 获取第一页，只取前4个
+        const response = await api.news.getNewsList(1, 4);
+        if (response.code === 200 && response.data) {
+            newsList.value = response.data.list.slice(0, 4);
+        }
+    } catch (error) {
+        console.error('获取非遗动态失败:', error);
+    } finally {
+        newsLoading.value = false;
+    }
+};
+
+// 页面加载时获取数据
+onMounted(() => {
+    fetchBanners();
+    fetchNavModules();
+    fetchProjects();
+    fetchInheritors();
+    fetchExhibitions();
+    fetchNews();
+});
 </script>
 
 <style scoped lang="scss">
@@ -197,8 +359,28 @@ $primary-color: #8B4513; // 主题色
 // 1. 轮播图
 .banner-wrapper {
     width: 100%;
-    height: 180px; // 增加高度，避免被覆盖后显示区域太小
+    height: 180px;
     position: relative;
+    // background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+    // Loading 状态
+    .banner-loading {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    // 空状态
+    .banner-empty {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f5f5f5;
+    }
 
     // 让 van-swipe 填满容器
     .my-swipe {
@@ -209,7 +391,7 @@ $primary-color: #8B4513; // 主题色
     .banner-img {
         width: 100%;
         height: 100%;
-        object-fit: fill; // 强制拉伸填充满容器
+        object-fit: fill;
     }
 
     // 自定义数字指示器（右下角，避开被覆盖区域）
@@ -255,28 +437,67 @@ $primary-color: #8B4513; // 主题色
     justify-content: space-around;
     padding: 20px 10px;
     background: transparent;
+    min-height: 90px;
+
+    // 加载状态
+    .nav-loading {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    // 空状态
+    .nav-empty {
+        width: 100%;
+        text-align: center;
+        color: #999;
+        font-size: 14px;
+    }
 
     .nav-item {
         display: flex;
         flex-direction: column;
         align-items: center;
+        cursor: pointer;
 
         .icon-box {
             width: 50px;
             height: 50px;
-            background: #fff; // 假设有白色背景
+            background: transparent; // 改为透明，原为 #fff
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 8px rgba(139, 69, 19, 0.1);
+            // box-shadow: 0 4px 8px rgba(139, 69, 19, 0.1); // 去掉阴影
             margin-bottom: 8px;
+            overflow: hidden;
+
+            .nav-icon {
+                width: 100%;
+                height: 100%;
+                object-fit: contain; // 保持图片比例
+                // padding: 8px; // 去掉内边距，让图片更大
+            }
         }
 
         .nav-name {
-            font-size: 13px;
-            color: $text-dark;
+            // 蓝湖样式
+            font-family: $font-family-serif; // 使用变量
             font-weight: 500;
+            font-size: 13px;
+            color: #6C2701;
+            line-height: 19px;
+            text-align: center;
+            font-style: normal;
+            text-transform: none;
+
+            margin-top: 4px; // 增加一点上间距
+        }
+
+        // 点击效果
+        &:active {
+            opacity: 0.7;
         }
     }
 }
@@ -293,20 +514,39 @@ $primary-color: #8B4513; // 主题色
         margin-bottom: 12px;
 
         .title {
-            font-size: 18px;
-            color: $text-dark;
-            font-weight: bold;
+            // 蓝湖样式
+            font-family: $font-family-serif;
+            font-weight: 700;
+            font-size: 16px;
+            color: #6C2701;
+            line-height: 23px;
+            text-align: center;
+            font-style: normal;
+            text-transform: none;
+
             position: relative;
             padding-left: 0;
-            // 类似设计图的衬线字体感
-            font-family: serif;
         }
 
         .more {
+            // 蓝湖样式
+            font-family: $font-family-serif;
+            font-weight: 400;
             font-size: 12px;
-            color: $text-light;
+            color: #6C2701;
+            line-height: 17px;
+            text-align: center;
+            font-style: normal;
+            text-transform: none;
+
             display: flex;
             align-items: center;
+            gap: 0px; // 文字和箭头之间的间距
+
+            .van-icon {
+                font-size: 10px; // 缩小箭头
+                transform: translateY(1px); // 稍微往下移一点
+            }
         }
     }
 }
@@ -314,37 +554,60 @@ $primary-color: #8B4513; // 主题色
 // 3. 非遗项目 (四格卡片)
 .project-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, 1fr); // 改为 4 列，或根据需要调整
     gap: 10px;
 
     .project-card {
-        height: 80px;
-        border-radius: 8px;
+        height: 100px;
+        width: 80px;
+        border-radius: 2px;
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
+        justify-content: flex-start; // 改为顶部对齐
+        padding-top: 15px; // 顶部留出间距
         color: #fff;
         position: relative;
         overflow: hidden;
+        background: #f0f0f0;
+
+        .card-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+            filter: brightness(0.8);
+        }
 
         .card-text {
-            font-size: 14px;
-            font-weight: bold;
-            z-index: 2;
-            // 竖排文字 (如果需要像原图左1那样)
-            // writing-mode: vertical-lr; 
-        }
+            // 蓝湖样式
+            font-family: $font-family-serif;
+            font-weight: 700;
+            font-size: 16px;
+            color: #FFFFFF;
+            line-height: 23px;
+            text-align: center;
+            font-style: normal;
+            text-transform: none;
 
-        .card-icon {
-            position: absolute;
-            bottom: -5px;
-            right: -5px;
-            font-size: 40px;
-            opacity: 0.3;
-            transform: rotate(-15deg);
+            z-index: 2;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+
+            // 强制一行两个字 (32px 正好是 2个16px字符宽)
+            width: 2.2em; // 稍微给多一点点余量防止换行bug，或者用 34px
+            word-break: break-all;
+            white-space: pre-wrap;
         }
     }
+}
+
+.loading-box {
+    display: flex;
+    justify-content: center;
+    padding: 20px 0;
 }
 
 // 4. 传承人 (横向滚动)
@@ -393,20 +656,43 @@ $primary-color: #8B4513; // 主题色
     gap: 12px;
 
     .exhibit-card {
-        height: 80px;
-        background: linear-gradient(135deg, #fdfbf7 0%, #f3efe6 100%);
-        border: 1px solid #eaddcf;
-        border-radius: 8px;
+        width: 100%; // 占满网格单元
+        height: 80px; // 保持高度，或者根据需要调整
+        background: transparent; // 没有背景框
+        border: none; // 没有边框
+        border-radius: 10px; // 假设圆角是 10px，如果是 100px 请改为 100px
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        padding: 0 20px;
+        justify-content: flex-start; // 左对齐
+        position: relative;
+        overflow: hidden;
+
+        .exhibit-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+            border-radius: 10px; // 图片圆角
+        }
 
         .exhibit-name {
-            font-size: 16px;
-            color: #8B4513;
-            font-weight: bold;
-            font-family: serif;
+            position: relative;
+            z-index: 2;
+            margin-left: 10px; // 靠左 10px
+
+            // 蓝湖样式
+            // width: 40px; // 限制宽度会导致换行，建议去掉或 auto
+            font-family: "Source Han Serif CN", "Songti SC", serif;
+            font-weight: 500;
+            font-size: 18px;
+            color: #6C2701;
+            line-height: 26px;
+            text-align: left;
+            font-style: normal;
+            text-transform: none;
         }
     }
 }
@@ -422,10 +708,14 @@ $primary-color: #8B4513; // 主题色
         border-radius: 8px;
         overflow: hidden;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column; // 保证卡片内容垂直排列
+        height: 100%; // 确保卡片占满网格高度
 
         .news-img-box {
             width: 100%;
             height: 120px;
+            flex-shrink: 0; // 防止图片被压缩
 
             img {
                 width: 100%;
@@ -436,13 +726,24 @@ $primary-color: #8B4513; // 主题色
 
         .news-info {
             padding: 10px;
+            flex: 1; // 占满剩余空间
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; // 上下分开，标题在上，日期在下
 
             .news-title {
-                font-size: 14px;
-                color: #333;
-                margin-bottom: 8px;
+                margin: 0; // 去掉 margin-bottom，靠 flex 布局控制间距
                 line-height: 1.4;
                 font-weight: bold;
+                width: 151px;
+                font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+                font-weight: 500;
+                font-size: 14px;
+                color: #3D3D3D;
+                line-height: 20px;
+                text-align: left;
+                font-style: normal;
+                text-transform: none;
             }
 
             .news-date {
@@ -451,6 +752,7 @@ $primary-color: #8B4513; // 主题色
                 display: flex;
                 align-items: center;
                 gap: 4px;
+                margin-top: 8px; // 保证标题很长时，和日期也有最小间距
             }
         }
     }

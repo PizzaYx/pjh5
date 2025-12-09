@@ -1,0 +1,55 @@
+// 列表页面公共样式
+// 用于 ExhibitionList、InheritorList、NewsList、ProjectList 等页面
+
+// 容器背景样式
+@mixin list-page-container {
+    min-height: 100vh;
+    background: url('../assets/img/bg.png') no-repeat center center;
+    background-size: cover;
+    background-attachment: fixed;
+}
+
+// 透明导航栏基础样式
+@mixin transparent-navbar-base {
+    :deep(.van-nav-bar) {
+        background-color: #FCF9F2;
+    }
+}
+
+// 导航栏标题 - 默认样式（#333，bold）
+@mixin navbar-title-default {
+    :deep(.van-nav-bar) {
+        background-color: #FCF9F2;
+
+        .van-nav-bar__title {
+            color: #333;
+            font-weight: bold;
+        }
+    }
+}
+
+// 导航栏标题 - 蓝湖样式（棕红色，思源宋体）
+@mixin navbar-title-lanhu {
+    :deep(.van-nav-bar) {
+        background-color: #FCF9F2;
+
+        .van-nav-bar__title {
+            font-family: "Source Han Serif CN", "Songti SC", serif;
+            font-weight: 600;
+            font-size: 17px;
+            color: #6C2701;
+            line-height: 24px;
+            text-align: center;
+            font-style: normal;
+            text-transform: none;
+        }
+    }
+}
+
+// 返回按钮样式
+@mixin back-icon {
+    .back-icon {
+        font-size: 20px;
+        color: #333;
+    }
+}

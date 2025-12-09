@@ -8,6 +8,12 @@ $text-color-secondary: #646566;
 $border-color: #ebedf0;
 $background-color: #f7f8fa;
 
+// 字体变量
+// 思源宋体栈（优先使用思源宋体，回退到 iOS 宋体，最后是通用衬线体）
+$font-family-serif: "Source Han Serif CN", "Noto Serif CJK SC", "Songti SC", serif;
+// 默认无衬线体（黑体）
+$font-family-sans: "PingFang SC", "Microsoft YaHei", sans-serif;
+
 // 字体大小
 $font-size-xs: 10px;
 $font-size-sm: 12px;
@@ -39,4 +45,3 @@ $z-index-normal: 1;
 $z-index-popup: 100;
 $z-index-toast: 1000;
 $z-index-loading: 2000;
-

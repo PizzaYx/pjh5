@@ -2,6 +2,7 @@
 export * from './storage'
 export * from './validator'
 export * from './format'
+export * from './image'
 
 /**
  * 防抖函数
