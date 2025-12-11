@@ -37,12 +37,12 @@
                 </div>
 
                 <!-- 导航图标 -->
-                <div v-else-if="navModules.length > 0" class="nav-item" v-for="item in navModules" :key="item.id"
-                    @click="handleBtn(item.id, item.title)">
+                <div v-else-if="navModules.length > 0" class="nav-item" v-for="item in navModules" :key="item.classid"
+                    @click="handleBtn(item.classid, item.name)">
                     <div class="icon-box">
-                        <img :src="item.img" :alt="item.title" class="nav-icon" />
+                        <img :src="item.imgmin" :alt="item.name" class="nav-icon" />
                     </div>
-                    <span class="nav-name">{{ item.title }}</span>
+                    <span class="nav-name">{{ item.name }}</span>
                 </div>
 
                 <!-- 空状态 -->
@@ -148,8 +148,8 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { showToast } from 'vant';
-import api, { type NavModuleItem, type ProjectItem, type InheritorItem, type ExhibitionItem, type NewsItem } from '../api/index';
-import { PlateArticleList } from '@/models';
+import api, { type ProjectItem, type InheritorItem, type ExhibitionItem, type NewsItem } from '../api/index';
+import { PlateArticleList, Records } from '@/models';
 
 const router = useRouter();
 
@@ -163,7 +163,7 @@ const banners = ref<PlateArticleList[]>([]);
 const loading = ref(true);
 
 // 2. 金刚区导航图标（从后台获取）
-const navModules = ref<NavModuleItem[]>([]);
+const navModules = ref<Records[]>([]);
 const navLoading = ref(true);
 
 // 3. 非遗项目（从后台获取）
@@ -233,7 +233,6 @@ const fetchBanners = async () => {
         loading.value = true;
         const response = await api.banner.getBannerList();
 
-
         if (response.code === 1200 && response.data && response.data.length > 0) {
             banners.value = response.data;
             console.log('Banner 数据:', response.data);
@@ -253,9 +252,9 @@ const fetchNavModules = async () => {
         navLoading.value = true;
         const response = await api.navModule.getNavModuleList();
 
-        if (response.code === 200 && response.data && response.data.length > 0) {
-            navModules.value = response.data;
-            console.log('导航模块数据:', response.data);
+        if ((response.code === 1200) && response.data && response.data.records) {
+            navModules.value = response.data.records;
+            console.log('导航模块数据:', response.data.records);
         }
     } catch (error) {
         console.error('获取导航模块失败:', error);

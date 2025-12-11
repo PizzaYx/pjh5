@@ -1,7 +1,7 @@
 // API 接口统一管理
 import { get, post, put } from '@/utils/request'
 import { API_CONFIG } from '@/config/api.config'
-import { PlateArticleList } from '@/models'
+import { PlateArticleList, ModeTemplate } from '@/models'
 
 // ========== 响应数据类型 ==========
 export interface Response<T = any> {
@@ -67,47 +67,22 @@ export const bannerApi = {
 }
 
 // ========== 导航模块（金刚区） ==========
-// 后端返回的数据结构
-interface NavModuleRaw {
-    id: string
-    title: string
-    Img: string // 注意：字段名是大写 I
-    collectionId: string
-    collectionName: string
-}
-
-// 前端使用的数据结构
-export interface NavModuleItem {
-    id: string
-    title: string
-    img: string // 完整图片 URL
-}
-
-// 转换函数
-function transformNavModule(raw: NavModuleRaw): NavModuleItem {
-    // PocketBase 图片路径格式（测试环境）
-    // 格式：http://baseURL/api/files/{collectionName}/{id}/{filename}
-    const imgUrl = `${API_CONFIG.baseURL}/api/files/${raw.collectionName}/${raw.id}/${raw.Img}`
-
-    return {
-        id: raw.id,
-        title: raw.title,
-        img: imgUrl,
-    }
-}
+// 使用 ModeTemplate 结构
 
 export const navModuleApi = {
     // 获取导航模块列表
-    async getNavModuleList(): Promise<Response<NavModuleItem[]>> {
-        const response = await get<Response<PageResponse<NavModuleRaw>>>('/java/list/homeFunModules')
+    async getNavModuleList(): Promise<Response<ModeTemplate>> {
+        const response = await get<Response<any>>('/app/modeTemplate', {
+            classid: 512025
+        })
 
         // 转换数据格式
-        const modules = response.data.list.map(transformNavModule)
+        const modeTemplate = new ModeTemplate(response.data)
 
         return {
             code: response.code,
             msg: response.msg,
-            data: modules,
+            data: modeTemplate,
         }
     },
 }
