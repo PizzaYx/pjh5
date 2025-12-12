@@ -30,6 +30,78 @@ const routes: RouteRecordRaw[] = [
         },
     },
     {
+        path: '/exhibition-album',
+        name: 'ExhibitionAlbum',
+        component: () => import('@/views/exhibition/Album.vue'),
+        meta: {
+            title: '相册',
+            keepAlive: true,
+        },
+    },
+    {
+        path: '/exhibition-album-detail',
+        name: 'ExhibitionAlbumDetail',
+        component: () => import('@/views/exhibition/AlbumDetail.vue'),
+        meta: {
+            title: '相册',
+            keepAlive: false,
+        },
+    },
+    {
+        path: '/exhibition-music',
+        name: 'ExhibitionMusic',
+        component: () => import('@/views/exhibition/Music.vue'),
+        meta: {
+            title: '音乐',
+            keepAlive: true,
+        },
+    },
+    {
+        path: '/exhibition-music-detail',
+        name: 'ExhibitionMusicDetail',
+        component: () => import('@/views/exhibition/MusicDetail.vue'),
+        meta: {
+            title: '音乐',
+            keepAlive: false,
+        },
+    },
+    {
+        path: '/exhibition-show',
+        name: 'ExhibitionShow',
+        component: () => import('@/views/exhibition/Show.vue'),
+        meta: {
+            title: '展览',
+            keepAlive: true,
+        },
+    },
+    {
+        path: '/exhibition-show-detail',
+        name: 'ExhibitionShowDetail',
+        component: () => import('@/views/exhibition/ShowDetail.vue'),
+        meta: {
+            title: '展览',
+            keepAlive: false,
+        },
+    },
+    {
+        path: '/exhibition-video',
+        name: 'ExhibitionVideo',
+        component: () => import('@/views/exhibition/Video.vue'),
+        meta: {
+            title: '视频',
+            keepAlive: true,
+        },
+    },
+    {
+        path: '/exhibition-video-detail',
+        name: 'ExhibitionVideoDetail',
+        component: () => import('@/views/exhibition/VideoDetail.vue'),
+        meta: {
+            title: '视频',
+            keepAlive: false,
+        },
+    },
+    {
         path: '/inheritor-list',
         name: 'InheritorList',
         component: () => import('@/views/InheritorList.vue'),
@@ -48,12 +120,21 @@ const routes: RouteRecordRaw[] = [
         },
     },
     {
+        path: '/news-detail',
+        name: 'NewsDetail',
+        component: () => import('@/views/NewsDetail.vue'),
+        meta: {
+            title: '非遗动态',
+            keepAlive: false,
+        },
+    },
+    {
         path: '/intangible-heritage-list',
         name: 'IntangibleHeritageList',
         component: () => import('@/views/IntangibleHeritageList.vue'),
         meta: {
             title: '非遗项目',
-            keepAlive: true,
+            keepAlive: false,
         },
     },
     {
@@ -69,7 +150,7 @@ const routes: RouteRecordRaw[] = [
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
     routes,
-    scrollBehavior(to, from, savedPosition) {
+    scrollBehavior(_to, _from, savedPosition) {
         if (savedPosition) {
             return savedPosition
         } else {
@@ -79,7 +160,7 @@ const router = createRouter({
 })
 
 // 路由守卫
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
     // 设置页面标题
     if (to.meta.title) {
         document.title = to.meta.title as string
@@ -100,4 +181,3 @@ router.afterEach(() => {
 })
 
 export default router
-

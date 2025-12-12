@@ -11,12 +11,12 @@
         <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
             <van-list v-model:loading="loading" :finished="finished" finished-text="" @load="onLoad">
                 <div class="project-grid">
-                    <div class="project-item" v-for="item in list" :key="item.id" @click="handleDetail(item)">
+                    <div class="project-item" v-for="item in list" :key="item.classid" @click="handleDetail(item)">
                         <!-- 背景图 -->
-                        <img :src="item.img2" :alt="item.title" class="item-bg" loading="lazy" />
+                        <img :src="item.imgmax" :alt="item.name" class="item-bg" loading="lazy" />
                         <!-- 文字内容 -->
                         <div class="info">
-                            <h3 class="title">{{ item.title }}</h3>
+                            <h3 class="title">{{ item.name }}</h3>
                         </div>
                     </div>
                 </div>
@@ -27,19 +27,21 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { showToast } from 'vant';
-import api, { type ExhibitionItem } from '@/api/index';
+import { useRouter, useRoute } from 'vue-router';
+import api from '@/api/index';
+import { Records } from '@/models';
 
 const router = useRouter();
+const route = useRoute();
 
 // 状态
-const list = ref<ExhibitionItem[]>([]);
+const list = ref<Records[]>([]);
 const loading = ref(false);
 const finished = ref(false);
 const refreshing = ref(false);
-const pageNum = ref(1);
-const pageSize = 20;
+
+// 从路由参数获取 classid，转换为 number
+const classid = Number(route.query.classid) || 0;
 
 // 返回上一页
 const onClickLeft = () => {
@@ -52,21 +54,14 @@ const onLoad = async () => {
         if (refreshing.value) {
             list.value = [];
             refreshing.value = false;
-            pageNum.value = 1;
         }
 
-        const response = await api.exhibition.getExhibitionList(pageNum.value, pageSize);
+        // 调用项目 API，传入 classid
+        const response = await api.project.getProjectList(classid);
 
-        if (response.code === 200 && response.data) {
-            const newData = response.data.list;
-            list.value.push(...newData);
-
-            pageNum.value++;
-
-            // 如果返回的数据少于 pageSize，说明没有更多了
-            if (newData.length < pageSize) {
-                finished.value = true;
-            }
+        if ((response.code === 1200 || response.code === 0) && response.data && response.data.records) {
+            list.value = (response.data.records as any);
+            finished.value = true;
         } else {
             finished.value = true;
         }
@@ -86,8 +81,22 @@ const onRefresh = () => {
 };
 
 // 点击详情
-const handleDetail = (item: ExhibitionItem) => {
-    showToast(`查看详情: ${item.title}`);
+const handleDetail = (item: Records) => {
+    // 根据 name 判断跳转到哪个子页面
+    let path = '/exhibition-album'; // 默认相册
+    
+    if (item.name.includes('音乐')) {
+        path = '/exhibition-music';
+    } else if (item.name.includes('展览')) {
+        path = '/exhibition-show';
+    } else if (item.name.includes('视频')) {
+        path = '/exhibition-video';
+    } else if (item.name.includes('相册')) {
+        path = '/exhibition-album';
+    }
+    
+    // 跳转到子页面，传递 classid 参数
+    router.push({ path, query: { classid: String(item.classid) } });
 };
 </script>
 

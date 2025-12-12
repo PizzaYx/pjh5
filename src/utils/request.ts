@@ -79,58 +79,39 @@ service.interceptors.response.use(
 
         const res = response.data
 
-        // 根据后端约定的状态码判断请求是否成功
-        // 后端返回格式：{ code: 200, msg: 'success', data: {...} }
-        if (res.code !== 200 && res.code !== 0 && res.code !== 1200) {
-            // 特殊处理：token 过期或失效 (1201, 403)
-            if (res.code === 1201 || res.code === 403) {
-                const config = response.config
-
-                if (!isRefreshing) {
-                    isRefreshing = true
-                    return refreshToken()
-                        .then((token) => {
-                            if (token) {
-                                localStorage.setItem('token', token)
-                                config.headers['token'] = `${token}`
-
-                                // 执行队列中的请求
-                                requests.forEach((cb) => cb(token))
-                                requests = []
-
-                                // 重试当前请求
-                                return service(config)
-                            } else {
-                                // 刷新失败，跳转登录或清理状态
-                                localStorage.removeItem('token')
-                                return Promise.reject(new Error('Token 刷新失败'))
-                            }
-                        })
-                        .catch((err) => {
-                            return Promise.reject(err)
-                        })
-                        .finally(() => {
-                            isRefreshing = false
-                        })
-                } else {
-                    // 正在刷新，将请求加入队列
-                    return new Promise((resolve) => {
-                        requests.push((token) => {
+        const code = res && typeof res === 'object' ? res.code : undefined
+        if (code === 1201 || code === 403) {
+            const config = response.config
+            if (!isRefreshing) {
+                isRefreshing = true
+                return refreshToken()
+                    .then((token) => {
+                        if (token) {
+                            localStorage.setItem('token', token)
                             config.headers['token'] = `${token}`
-                            resolve(service(config))
-                        })
+                            requests.forEach((cb) => cb(token))
+                            requests = []
+                            return service(config)
+                        } else {
+                            localStorage.removeItem('token')
+                            return Promise.reject(new Error('Token 刷新失败'))
+                        }
                     })
-                }
+                    .catch((err) => {
+                        return Promise.reject(err)
+                    })
+                    .finally(() => {
+                        isRefreshing = false
+                    })
+            } else {
+                return new Promise((resolve) => {
+                    requests.push((token) => {
+                        config.headers['token'] = `${token}`
+                        resolve(service(config))
+                    })
+                })
             }
-
-            showToast({
-                message: res.msg || res.message || '请求失败',
-                position: 'top',
-            })
-
-            return Promise.reject(new Error(res.msg || res.message || '请求失败'))
         }
-
         return res
     },
     (error: AxiosError) => {
@@ -220,4 +201,3 @@ export function upload<T = any>(url: string, file: File | Blob, config?: AxiosRe
         ...config,
     })
 }
-

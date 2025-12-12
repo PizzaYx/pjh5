@@ -17,12 +17,12 @@
                 <div class="news-list">
                     <div class="news-card" v-for="item in list" :key="item.id" @click="handleDetail(item)">
                         <div class="news-img-box">
-                            <img :src="item.img" loading="lazy" />
+                            <img :src="formatImg(item.imgpath1)" loading="lazy" />
                         </div>
                         <div class="news-info">
                             <p class="news-title van-multi-ellipsis--l2">{{ item.title }}</p>
                             <p class="news-date">
-                                <van-icon name="calendar-o" /> {{ item.date }}
+                                <van-icon name="calendar-o" /> {{ formatNewsDate(item.publishtime) }}
                             </p>
                         </div>
                     </div>
@@ -35,13 +35,15 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { showToast } from 'vant';
-import api, { type NewsItem } from '@/api/index';
+import { useRouter } from 'vue-router';
+import api from '@/api/index';
+import { imageDealWith } from '@/utils/image';
 
 const router = useRouter();
 
 // 状态
 const searchValue = ref('');
-const list = ref<NewsItem[]>([]);
+const list = ref<any[]>([]);
 const loading = ref(false);
 const finished = ref(false);
 const refreshing = ref(false);
@@ -54,6 +56,7 @@ const onClickLeft = () => router.back();
 const onSearch = (val: string) => {
     // TODO: 后端如果支持搜索，需要传入搜索参数
     showToast(`搜索: ${val}`);
+    refreshing.value = true;
     onRefresh();
 };
 
@@ -65,10 +68,9 @@ const onLoad = async () => {
             pageNum.value = 1;
         }
 
-        const response = await api.news.getNewsList(pageNum.value, pageSize);
-
-        if (response.code === 200 && response.data) {
-            const newData = response.data.list;
+        const response = await api.news.getNewsPage(pageNum.value, searchValue.value);
+        if (response.code === 1200 && response.data) {
+            const newData = response.data || [];
             list.value.push(...newData);
             pageNum.value++;
             if (newData.length < pageSize) finished.value = true;
@@ -86,11 +88,28 @@ const onLoad = async () => {
 const onRefresh = () => {
     finished.value = false;
     loading.value = true;
+    // 通过 refreshing 标记触发 onLoad 内的重置逻辑（清空列表并将 pageNum 置为 1）
+    if (!refreshing.value) {
+        refreshing.value = true;
+    }
     onLoad();
 };
 
-const handleDetail = (item: NewsItem) => {
-    showToast(`查看详情: ${item.title}`);
+const handleDetail = (item: any) => {
+    router.push({ path: '/news-detail', query: { aid: String(item.id || ''), title: item.title || '' } });
+};
+
+const formatImg = (p?: string) => {
+    return imageDealWith(p || '');
+};
+const formatNewsDate = (ts?: number) => {
+    if (!ts) return '';
+    const d = new Date(ts as number);
+    if (isNaN(d.getTime())) return '';
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}.${m}.${day}`;
 };
 </script>
 

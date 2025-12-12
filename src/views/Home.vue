@@ -61,10 +61,11 @@
                 </div>
 
                 <div v-else class="project-grid">
-                    <div class="project-card" v-for="item in projects" :key="item.id" @click="handleDetail(item.id)">
-                        <!-- 使用 img1 作为背景图或直接显示 -->
-                        <img :src="item.img1" :alt="item.title" class="card-bg" />
-                        <span class="card-text">{{ item.title }}</span>
+                    <div class="project-card" v-for="item in projects" :key="item.classid"
+                        @click="handleDetail(item.classid)">
+                        <!-- 使用 imgmin 作为背景图或直接显示 -->
+                        <img :src="item.imgmin" :alt="item.name" class="card-bg" />
+                        <span class="card-text">{{ item.name }}</span>
                     </div>
                 </div>
             </div>
@@ -82,9 +83,10 @@
 
                 <div v-else class="scroll-container">
                     <div class="inheritor-card" v-for="item in inheritors" :key="item.id">
-                        <img :src="item.img" class="inheritor-img" />
+                        <img :src="sanitizeImage(item.image) || imageDealWith(item.img || item.imgpath1 || item.imgmin || item.imgmax || '')"
+                            class="inheritor-img" />
                         <div class="overlay">
-                            <span>{{ item.title }}</span>
+                            <span>{{ item.name || item.title }}</span>
                         </div>
                     </div>
                 </div>
@@ -102,10 +104,11 @@
                 </div>
 
                 <div v-else class="exhibition-grid">
-                    <div class="exhibit-card" v-for="item in exhibitions" :key="item.id">
-                        <span class="exhibit-name">{{ item.title }}</span>
+                    <div class="exhibit-card" v-for="item in exhibitions" :key="item.classid"
+                        @click="handleExhibitionDetail(item)">
+                        <span class="exhibit-name">{{ item.name }}</span>
                         <!-- 使用图片 -->
-                        <img :src="item.img1" class="exhibit-img" />
+                        <img :src="item.imgmin" class="exhibit-img" />
                     </div>
                 </div>
             </div>
@@ -122,14 +125,14 @@
                 </div>
 
                 <div v-else class="news-list">
-                    <div class="news-card" v-for="item in newsList" :key="item.id">
+                    <div class="news-card" v-for="item in newsList" :key="item.id" @click="handleNewsDetail(item)">
                         <div class="news-img-box">
-                            <img :src="item.img" loading="lazy" />
+                            <img :src="formatImg(item.imgpath1)" loading="lazy" />
                         </div>
                         <div class="news-info">
                             <p class="news-title van-multi-ellipsis--l2">{{ item.title }}</p>
                             <p class="news-date">
-                                <van-icon name="calendar-o" /> {{ item.date }}
+                                <van-icon name="calendar-o" /> {{ formatNewsDate(item.publishtime) }}
                             </p>
                         </div>
                     </div>
@@ -148,13 +151,16 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { showToast } from 'vant';
-import api, { type ProjectItem, type InheritorItem, type ExhibitionItem, type NewsItem } from '../api/index';
+import api from '../api/index';
+import { imageDealWith } from '@/utils/image';
 import { PlateArticleList, Records } from '@/models';
 
 const router = useRouter();
 
-// --- 类型定义 (TypeScript) ---
-// 注：NavModuleItem、ProjectItem、InheritorItem、ExhibitionItem、NewsItem 使用从 api 导入的类型
+// 硬编码 classid（便于统一修改）
+const FY_CLASSID = 512026; // 非遗项目
+const WSZT_CLASSID = 512028; // 网上展厅
+
 
 // --- 数据定义 ---
 
@@ -167,19 +173,19 @@ const navModules = ref<Records[]>([]);
 const navLoading = ref(true);
 
 // 3. 非遗项目（从后台获取）
-const projects = ref<ProjectItem[]>([]);
+const projects = ref<Records[]>([]);
 const projectLoading = ref(true);
 
 // 4. 传承人 (横向滚动)
-const inheritors = ref<InheritorItem[]>([]);
+const inheritors = ref<any[]>([]);
 const inheritorLoading = ref(true);
 
 // 5. 网上展厅 (2x2)
-const exhibitions = ref<ExhibitionItem[]>([]);
+const exhibitions = ref<Records[]>([]);
 const exhibitionLoading = ref(true);
 
 // 6. 非遗动态 (瀑布流)
-const newsList = ref<NewsItem[]>([]);
+const newsList = ref<any[]>([]);
 const newsLoading = ref(true);
 
 // 轮播图当前索引
@@ -199,9 +205,9 @@ const onBannerChange = (index: number) => {
 const handleMore = (section: string) => {
 
     if (section === '非遗项目') {
-        router.push('/project-list');
+        router.push({ path: '/project-list', query: { classid: String(FY_CLASSID) } });
     } else if (section === '网上展厅') {
-        router.push('/exhibition-list');
+        router.push({ path: '/exhibition-list', query: { classid: String(WSZT_CLASSID) } });
     } else if (section === '非遗传承人') {
         router.push('/inheritor-list');
     } else if (section === '非遗动态') {
@@ -211,9 +217,10 @@ const handleMore = (section: string) => {
 const handleBtn = (id: string | number, section: string) => {
 
     if (section === '非遗项目') {
-        router.push('/project-list');
+        // 点击金刚区某项时，将该项的 classid 传给 project-list
+        router.push({ path: '/project-list', query: { classid: String(id) } });
     } else if (section === '网上展厅') {
-        router.push('/exhibition-list');
+        router.push({ path: '/exhibition-list', query: { classid: String(id) } });
     } else if (section === '非遗传承人') {
         router.push('/inheritor-list');
     } else if (section === '非遗动态') {
@@ -222,7 +229,27 @@ const handleBtn = (id: string | number, section: string) => {
 };
 
 const handleDetail = (id: string | number) => {
-    router.push('/intangible-heritage-list');
+    // 将项 id 传给详情页，避免未使用参数的 lint 报错
+    router.push({ path: '/intangible-heritage-list', query: { id: String(id) } });
+}
+
+// 展厅卡片点击事件
+const handleExhibitionDetail = (item: Records) => {
+    // 根据 name 判断跳转到哪个子页面
+    let path = '/exhibition-album'; // 默认相册
+
+    if (item.name.includes('音乐')) {
+        path = '/exhibition-music';
+    } else if (item.name.includes('展览')) {
+        path = '/exhibition-show';
+    } else if (item.name.includes('视频')) {
+        path = '/exhibition-video';
+    } else if (item.name.includes('相册')) {
+        path = '/exhibition-album';
+    }
+
+    // 跳转到子页面，传递 classid 参数
+    router.push({ path, query: { classid: String(item.classid) } });
 }
 
 // --- API 调用（Java 标准格式，拦截器自动处理 NocoDB 转换） ---
@@ -255,6 +282,7 @@ const fetchNavModules = async () => {
         if ((response.code === 1200) && response.data && response.data.records) {
             navModules.value = response.data.records;
             console.log('导航模块数据:', response.data.records);
+
         }
     } catch (error) {
         console.error('获取导航模块失败:', error);
@@ -268,12 +296,12 @@ const fetchNavModules = async () => {
 const fetchProjects = async () => {
     try {
         projectLoading.value = true;
-        // 获取第一页，backend 取前4个
-        const response = await api.project.getProjectList(1, 4);
+        // 临时使用硬编码 FY_CLASSID 进行测试
+        const response = await api.project.getProjectList(FY_CLASSID);
 
-        if (response.code === 200 && response.data) {
+        if (response.code === 1200 && response.data && response.data.records) {
             // 只取前4个展示在首页
-            projects.value = response.data.list.slice(0, 4);
+            projects.value = response.data.records.slice(0, 4);
         }
     } catch (error) {
         console.error('获取非遗项目失败:', error);
@@ -287,9 +315,10 @@ const fetchInheritors = async () => {
     try {
         inheritorLoading.value = true;
         // 获取第一页
-        const response = await api.inheritor.getInheritorList(1, 10);
-        if (response.code === 200 && response.data) {
-            inheritors.value = response.data.list;
+        const response = await api.inheritor.getInheritorPage(1, '', '');
+        if (response.code === 1200 && Array.isArray(response.data)) {
+            // 首页仅展示前 8 个
+            inheritors.value = response.data.slice(0, 8);
         }
     } catch (error) {
         console.error('获取非遗传承人失败:', error);
@@ -302,10 +331,12 @@ const fetchInheritors = async () => {
 const fetchExhibitions = async () => {
     try {
         exhibitionLoading.value = true;
-        // 获取第一页，只取前4个
-        const response = await api.exhibition.getExhibitionList(1, 4);
-        if (response.code === 200 && response.data) {
-            exhibitions.value = response.data.list.slice(0, 4);
+        // 临时使用硬编码 WSZT_CLASSID 进行测试
+        const response = await api.project.getProjectList(WSZT_CLASSID);
+
+        if (response.code === 1200 && response.data && response.data.records) {
+            // 只取前4个展示在首页
+            exhibitions.value = (response.data.records as any).slice(0, 4);
         }
     } catch (error) {
         console.error('获取网上展厅失败:', error);
@@ -318,10 +349,9 @@ const fetchExhibitions = async () => {
 const fetchNews = async () => {
     try {
         newsLoading.value = true;
-        // 获取第一页，只取前4个
-        const response = await api.news.getNewsList(1, 4);
-        if (response.code === 200 && response.data) {
-            newsList.value = response.data.list.slice(0, 4);
+        const response = await api.news.getNewsPage(1, '');
+        if (response.code === 1200 && response.data) {
+            newsList.value = (response.data || []).slice(0, 4);
         }
     } catch (error) {
         console.error('获取非遗动态失败:', error);
@@ -330,11 +360,32 @@ const fetchNews = async () => {
     }
 };
 
+const handleNewsDetail = (item: any) => {
+    router.push({ path: '/news-detail', query: { aid: String(item.id || ''), title: item.title || '' } });
+};
+
+const formatImg = (p?: string) => {
+    return imageDealWith(p || '');
+};
+const sanitizeImage = (img?: string) => {
+    if (!img) return '';
+    return String(img).replace(/[`\s]/g, '');
+};
+const formatNewsDate = (ts?: number) => {
+    if (!ts) return '';
+    const d = new Date(ts);
+    if (isNaN(d.getTime())) return '';
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}.${m}.${day}`;
+};
+
 // 页面加载时获取数据
 onMounted(() => {
     fetchBanners();
     fetchNavModules();
-    fetchProjects();
+    fetchProjects(); // 临时使用硬编码 classid 请求首页预览
     fetchInheritors();
     fetchExhibitions();
     fetchNews();

@@ -134,6 +134,5 @@ export function camelToSnake(str: string): string {
  * 下划线转驼峰
  */
 export function snakeToCamel(str: string): string {
-  return str.replace(/_([a-z])/g, (match, letter) => letter.toUpperCase())
+  return str.replace(/_([a-z])/g, (_match, letter) => letter.toUpperCase())
 }
-

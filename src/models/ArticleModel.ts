@@ -187,3 +187,95 @@ export class PlateArticleList {
         this.isLotteryLesson = Number(json['isLotteryLesson']) || 0
     }
 }
+
+export class VideoCommentData {
+    videourl: string = ''
+    imgurl: string = ''
+    title: string = ''
+    publishtime: number = 0
+    friendlyTime: string = ''
+    c_num: number = 0
+    intro: string = ''
+    chatroomid: string = ''
+    direct_time: number = 0
+    direct_state: number = 0
+    direct_isback: number = 0
+    vediodirection: string = ''
+    recorded: number = 0
+    context: string = ''
+    directChatroom: number = 0
+
+    constructor(json: any = {}, type: number = 0) {
+        if (!json) return
+        const m3u8 = imageDealWith(json['vediopath_m3u8'] || '')
+        const live = imageDealWith(json['directpath'] || '')
+        this.videourl = type === 28 ? live : m3u8
+        this.imgurl = imageDealWith(json['imgpath1'] || '')
+        this.title = json['title'] || ''
+        this.publishtime = Number(json['publishtime']) || 0
+        this.friendlyTime = json['friendlyTime'] || ''
+        this.c_num = Number(json['click']) || 0
+        this.intro = json['intro'] || ''
+        this.chatroomid = json['roomid'] || ''
+        this.direct_time = Number(json['direct_time']) || 0
+        this.direct_isback = Number(json['directIsback']) || 0
+        this.direct_state = Number(json['directState']) || 0
+        this.vediodirection = String(json['vediodirection'] || '')
+        const recRaw = json['recorded']
+        this.recorded = typeof recRaw === 'string' ? parseInt(recRaw) || 0 : Number(recRaw) || 0
+        this.context = json['content'] || ''
+        const dcRaw = json['directChatroom']
+        this.directChatroom = typeof dcRaw === 'string' ? parseInt(dcRaw) || 0 : Number(dcRaw) || 0
+    }
+}
+
+export class GetArticle {
+    id: string = ''
+    click: number = 0
+    commsum: number = 0
+    content: string = ''
+    funid: string = ''
+    funname: string = ''
+    funtype: number = 0
+    imgpath1: string = ''
+    intro: string = ''
+    keyword: string = ''
+    publisher: string = ''
+    publishtime: number = 0
+    score: string = ''
+    simpletitle: string = ''
+    source: string = ''
+    subtitle: string = ''
+    timestamp: number = 0
+    title: string = ''
+    type: number = 0
+    typelabel: string = ''
+    videoPath: string = ''
+    creater: string = ''
+
+    constructor(json: any = {}) {
+        if (!json) return
+        this.id = json['id'] || ''
+        this.click = Number(json['click']) || 0
+        this.commsum = Number(json['commsum']) || 0
+        this.content = json['content'] || ''
+        this.funid = json['funid'] || ''
+        this.funname = json['funname'] || ''
+        this.funtype = Number(json['funtype']) || 0
+        this.imgpath1 = imageDealWith(json['imgpath1'] || '')
+        this.intro = json['intro'] || ''
+        this.keyword = json['keyword'] || ''
+        this.publisher = json['publisher'] || ''
+        this.publishtime = Number(json['publishtime']) || 0
+        this.score = json['score'] || ''
+        this.simpletitle = json['simpletitle'] || ''
+        this.source = json['source'] || ''
+        this.subtitle = json['subtitle'] || ''
+        this.timestamp = Number(json['timestamp']) || 0
+        this.title = json['title'] || ''
+        this.type = Number(json['type']) || 0
+        this.typelabel = json['typelabel'] || ''
+        this.videoPath = json['videoPath'] || ''
+        this.creater = json['creater'] || ''
+    }
+}

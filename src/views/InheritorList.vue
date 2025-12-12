@@ -13,10 +13,11 @@
                 <div class="inheritor-grid">
                     <div class="inheritor-item" v-for="item in list" :key="item.id" @click="handleDetail(item)">
                         <div class="img-box">
-                            <img :src="item.img" :alt="item.title" loading="lazy" />
+                            <img :src="formatImg(sanitizeImage(item.image) || item.img || item.imgpath1 || item.imgmin || item.imgmax || '')"
+                                :alt="item.name || item.title" loading="lazy" />
                         </div>
                         <div class="info">
-                            <h3 class="title">{{ item.title }}</h3>
+                            <h3 class="title">{{ item.name || item.title }}</h3>
                         </div>
                     </div>
                 </div>
@@ -29,16 +30,16 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { showToast } from 'vant';
-import api, { type InheritorItem } from '@/api/index';
+import api from '@/api/index';
+import { imageDealWith } from '@/utils/image';
 
 const router = useRouter();
 
-const list = ref<InheritorItem[]>([]);
+const list = ref<any[]>([]);
 const loading = ref(false);
 const finished = ref(false);
 const refreshing = ref(false);
 const pageNum = ref(1);
-const pageSize = 20;
 
 const onClickLeft = () => router.back();
 
@@ -50,13 +51,12 @@ const onLoad = async () => {
             pageNum.value = 1;
         }
 
-        const response = await api.inheritor.getInheritorList(pageNum.value, pageSize);
-
-        if (response.code === 200 && response.data) {
-            const newData = response.data.list;
+        const response = await api.inheritor.getInheritorPage(pageNum.value, '', '');
+        if (response.code === 1200 && Array.isArray(response.data)) {
+            const newData = response.data || [];
             list.value.push(...newData);
             pageNum.value++;
-            if (newData.length < pageSize) finished.value = true;
+            if (newData.length === 0) finished.value = true;
         } else {
             finished.value = true;
         }
@@ -74,8 +74,14 @@ const onRefresh = () => {
     onLoad();
 };
 
-const handleDetail = (item: InheritorItem) => {
+const handleDetail = (item: any) => {
     showToast(`查看详情: ${item.title}`);
+};
+
+const formatImg = (p?: string) => imageDealWith(p || '');
+const sanitizeImage = (img?: string) => {
+    if (!img) return '';
+    return String(img).replace(/[`\s]/g, '');
 };
 </script>
 

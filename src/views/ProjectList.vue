@@ -7,20 +7,17 @@
             </template>
         </van-nav-bar>
 
-        <!-- 搜索框 -->
-        <van-search v-model="searchValue" placeholder="请输入搜索关键词" shape="round" background="transparent"
-            class="custom-search" @search="onSearch" />
-
         <!-- 项目列表 -->
         <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
             <van-list v-model:loading="loading" :finished="finished" finished-text="" @load="onLoad">
                 <div class="project-grid">
-                    <div class="project-item" v-for="item in list" :key="item.id" @click="handleDetail(item)">
+                    <div class="project-item" v-for="item in list" :key="item.classid"
+                        @click="handleDetail(item.classid)">
                         <!-- 背景图 -->
-                        <img :src="item.img2" :alt="item.title" class="item-bg" loading="lazy" />
+                        <img :src="item.imgmax" :alt="item.name" class="item-bg" loading="lazy" />
                         <!-- 文字内容 -->
                         <div class="info">
-                            <h3 class="title">{{ item.title }}</h3>
+                            <h3 class="title">{{ item.name }}</h3>
                         </div>
                     </div>
                 </div>
@@ -31,31 +28,47 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { showToast } from 'vant';
-import api, { type ProjectItem } from '@/api/index';
+import api from '@/api/index';
+import { Records } from '@/models';
 
+const route = useRoute();
 const router = useRouter();
 
 // 状态
-const searchValue = ref('');
-const list = ref<ProjectItem[]>([]);
+const list = ref<Records[]>([]);
 const loading = ref(false);
 const finished = ref(false);
 const refreshing = ref(false);
-const pageNum = ref(1);
-const pageSize = 20;
+const projectClassId = ref<number | null>(
+    Number(route.query.classid ?? route.params.classid ?? route.query.classId ?? route.params.classId) || null,
+);
 
 // 返回上一页
 const onClickLeft = () => {
     router.back();
 };
 
-// 搜索
-const onSearch = (val: string) => {
-    // TODO: 后端如果支持搜索，需要传入搜索参数
-    showToast(`搜索: ${val}`);
-    onRefresh();
+// 获取 classid：仅使用路由传入的 classid，不再从接口回退获取。
+// 如果没有 classid，调用方应当处理（例如提示或返回）。
+const fetchProjectClassId = async () => {
+    return projectClassId.value;
+};
+
+// 拉取非遗项目完整列表
+const loadProjects = async () => {
+    const classid = await fetchProjectClassId();
+    if (!classid) {
+        finished.value = true;
+        return;
+    }
+
+    const response = await api.project.getProjectList(classid);
+    if (response.code === 1200 && response.data?.records) {
+        list.value = response.data.records;
+    }
+    finished.value = true; // 接口一次性返回全部数据
 };
 
 // 加载数据
@@ -64,26 +77,14 @@ const onLoad = async () => {
         if (refreshing.value) {
             list.value = [];
             refreshing.value = false;
-            pageNum.value = 1;
+            finished.value = false;
         }
 
-        const response = await api.project.getProjectList(pageNum.value, pageSize);
-
-        if (response.code === 200 && response.data) {
-            const newData = response.data.list;
-            list.value.push(...newData);
-
-            pageNum.value++;
-
-            // 如果返回的数据少于 pageSize，说明没有更多了
-            if (newData.length < pageSize) {
-                finished.value = true;
-            }
-        } else {
-            finished.value = true;
-        }
+        loading.value = true;
+        await loadProjects();
     } catch (error) {
         console.error('获取非遗项目列表失败:', error);
+        showToast('获取非遗项目失败');
         finished.value = true;
     } finally {
         loading.value = false;
@@ -97,10 +98,9 @@ const onRefresh = () => {
     onLoad();
 };
 
-// 点击详情
-const handleDetail = (item: ProjectItem) => {
-    // showToast(`查看详情: ${item.title}`);
-    router.push('/intangible-heritage-list');
+// 点击详情，传入项目 id 并通过 query 跳转到详情页
+const handleDetail = (id: string | number) => {
+    router.push({ path: '/intangible-heritage-list', query: { id: String(id) } });
 };
 </script>
 

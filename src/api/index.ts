@@ -1,7 +1,7 @@
 // API 接口统一管理
 import { get, post, put } from '@/utils/request'
 import { API_CONFIG } from '@/config/api.config'
-import { PlateArticleList, ModeTemplate } from '@/models'
+import { PlateArticleList, ModeTemplate, GetArticlePhotos, VideoCommentData, GetArticle } from '@/models'
 
 // ========== 响应数据类型 ==========
 export interface Response<T = any> {
@@ -88,95 +88,35 @@ export const navModuleApi = {
 }
 
 // ========== 非遗项目模块 ==========
-interface ProjectRaw {
-    id: string
-    title: string
-    img1: string // 首页展示用
-    img2: string // 列表页展示用
-    collectionId: string
-    collectionName: string
-    [key: string]: any
-}
-
-export interface ProjectItem {
-    id: string
-    title: string
-    img1: string
-    img2: string
-}
-
-function transformProject(raw: ProjectRaw): ProjectItem {
-    return {
-        id: raw.id,
-        title: raw.title,
-        // img1 完整路径
-        img1: `${API_CONFIG.baseURL}/api/files/${raw.collectionName}/${raw.id}/${raw.img1}`,
-        // img2 完整路径
-        img2: `${API_CONFIG.baseURL}/api/files/${raw.collectionName}/${raw.id}/${raw.img2}`,
-    }
-}
-
 export const projectApi = {
     // 获取非遗项目列表
-    async getProjectList(pageNum: number = 1, pageSize: number = 20): Promise<Response<PageResponse<ProjectItem>>> {
-        const response = await get<Response<PageResponse<ProjectRaw>>>('/java/list/homefypj', {
-            pageNum,
-            pageSize,
+    async getProjectList(classid: number): Promise<Response<ModeTemplate>> {
+        const response = await get<Response<any>>('/app/modeTemplate', {
+            classid
         })
 
-        const projects = response.data.list.map(transformProject)
+        const modeTemplate = new ModeTemplate(response.data)
 
         return {
             code: response.code,
             msg: response.msg,
-            data: {
-                list: projects,
-                pageNum: response.data.pageNum,
-                pageSize: response.data.pageSize,
-            },
+            data: modeTemplate,
         }
     },
 }
 
 // ========== 非遗传承人模块 ==========
-interface InheritorRaw {
-    id: string
-    title: string
-    img: string
-    collectionId: string
-    collectionName: string
-    [key: string]: any
-}
-
-export interface InheritorItem {
-    id: string
-    title: string
-    img: string
-}
-
-function transformInheritor(raw: InheritorRaw): InheritorItem {
-    return {
-        id: raw.id,
-        title: raw.title,
-        img: `${API_CONFIG.baseURL}/api/files/${raw.collectionName}/${raw.id}/${raw.img}`,
-    }
-}
-
 export const inheritorApi = {
-    async getInheritorList(pageNum: number = 1, pageSize: number = 20): Promise<Response<PageResponse<InheritorItem>>> {
-        const response = await get<Response<PageResponse<InheritorRaw>>>('/java/list/homefyccr', {
+    async getInheritorPage(pageNum: number = 1, level: string = '', name: string = ''): Promise<Response<any[]>> {
+        const response = await get<Response<any[]>>('/intangibleheritage/getInheritorPage', {
             pageNum,
-            pageSize,
+            level,
+            name,
         })
-        const list = response.data.list.map(transformInheritor)
         return {
             code: response.code,
             msg: response.msg,
-            data: {
-                list: list,
-                pageNum: response.data.pageNum,
-                pageSize: response.data.pageSize,
-            },
+            data: response.data || [],
         }
     },
 }
@@ -233,74 +173,119 @@ export const exhibitionApi = {
     },
 }
 
-// ========== 非遗动态模块 ==========
-interface NewsRaw {
-    id: string
-    title: string
-    time: string
-    img: string
-    collectionId: string
-    collectionName: string
-    [key: string]: any
-}
-
-export interface NewsItem {
-    id: string
-    title: string
-    date: string
-    img: string
-    address?: string
-}
-
-function transformNews(raw: NewsRaw): NewsItem {
-    // 格式化日期：2025-12-05 03:18... -> 2025.12.05
-    let dateStr = ''
-    if (raw.time) {
-        const date = new Date(raw.time)
-        if (!isNaN(date.getTime())) {
-            const year = date.getFullYear()
-            const month = String(date.getMonth() + 1).padStart(2, '0')
-            const day = String(date.getDate()).padStart(2, '0')
-            dateStr = `${year}.${month}.${day}`
-        } else {
-            dateStr = raw.time.substring(0, 10) // 降级处理
-        }
-    } else if (raw.friendlyTime) {
-        dateStr = raw.friendlyTime
-    }
-
-    let imgUrl = ''
-    const rawImg = raw.img || raw.imgpath1 || ''
-    if (rawImg && (rawImg.startsWith('http') || rawImg.startsWith('//'))) {
-        imgUrl = rawImg
-    } else {
-        imgUrl = `${API_CONFIG.baseURL}/api/files/${raw.collectionName}/${raw.id}/${rawImg}`
-    }
-
-    return {
-        id: raw.id,
-        title: raw.title || raw.simpletitle || '',
-        date: dateStr,
-        img: imgUrl,
-        address: raw.address || ''
-    }
-}
-
-export const newsApi = {
-    async getNewsList(pageNum: number = 1, pageSize: number = 20): Promise<Response<PageResponse<NewsItem>>> {
-        const response = await get<Response<PageResponse<NewsRaw>>>('/java/list/homefydt', {
+// ========== 网上展厅子栏目（相册/音乐/展览/视频） ==========
+export const articleApi = {
+    // 获取栏目文章列表
+    async getPlateArticleList(classid: number, pageNum: number = 1, istop: number = 0): Promise<Response<PlateArticleList[]>> {
+        const response = await get<Response<any[]>>('/app/listortop2', {
+            classid,
+            istop,
             pageNum,
-            pageSize,
         })
-        const list = response.data.list.map(transformNews)
+
+        const list = (response.data || []).map((item: any) => new PlateArticleList(item))
+
         return {
             code: response.code,
             msg: response.msg,
-            data: {
-                list: list,
-                pageNum: response.data.pageNum,
-                pageSize: response.data.pageSize,
-            },
+            data: list,
+        }
+    },
+    // 获取文章详情（视频/直播）
+    async getArticleDetail(aid: string, type: number = 0): Promise<Response<VideoCommentData>> {
+        const r = await get<Response<any>>('/app/article', { aid })
+        return {
+            code: r.code,
+            msg: r.msg,
+            data: new VideoCommentData(r.data || {}, type),
+        }
+    },
+    // 获取文章详情（富文本）
+    async getArticle(aid: string): Promise<Response<GetArticle>> {
+        const r = await get<Response<any>>('/app/article', { aid })
+        return {
+            code: r.code,
+            msg: r.msg,
+            data: new GetArticle(r.data || {}),
+        }
+    },
+}
+
+// ========== 图集详情 ==========
+export const photoApi = {
+    async getArticlePhotos(aid: string): Promise<Response<GetArticlePhotos>> {
+        const endpoints = [
+            '/photo/photos',
+        ]
+
+        const normalizeToPhotoModelJson = (raw: any): any => {
+            const imgsRaw =
+                raw?.records ||
+                raw?.imageDataVec ||
+                raw?.images ||
+                raw?.imageList ||
+                raw?.photos ||
+                raw?.list ||
+                []
+            const records = (imgsRaw || []).map((it: any, idx: number) => ({
+                id: String(it?.id ?? idx),
+                imgpath: it?.imgpath || it?.path || it?.url || it?.img || '',
+                intro: it?.intro || '',
+                sort: Number(it?.sort) || 0,
+                title: it?.title || raw?.title || '',
+            }))
+            return {
+                title: raw?.title || '',
+                articleid: String(raw?.articleid || raw?.id || ''),
+                appcode: raw?.appcode || '',
+                timestamp: raw?.timestamp || raw?.time || raw?.date || '',
+                commsum: Number(raw?.commsum) || 0,
+                score: Number(raw?.score) || 0,
+                records,
+            }
+        }
+
+        for (const ep of endpoints) {
+            try {
+                const r = await get<Response<any>>(ep, { aid })
+                return {
+                    code: r.code,
+                    msg: r.msg,
+                    data: new GetArticlePhotos(normalizeToPhotoModelJson(r.data)),
+                }
+            } catch {
+            }
+        }
+
+        return {
+            code: 500,
+            msg: '获取图集失败',
+            data: new GetArticlePhotos({
+                title: '',
+                articleid: '',
+                appcode: '',
+                timestamp: '',
+                commsum: 0,
+                score: 0,
+                records: [],
+            }),
+        }
+    },
+}
+
+// ========== 非遗动态模块 ==========
+
+
+export const newsApi = {
+    async getNewsPage(pageNum: number = 1, name: string = ''): Promise<Response<any[]>> {
+        const response = await get<Response<any[]>>('/intangibleheritage/getNewsPage', {
+            pageNum,
+            name,
+        })
+        return {
+            code: response.code,
+            msg: response.msg,
+            data: response.data || [],
         }
     },
 }
@@ -349,9 +334,10 @@ export default {
     project: projectApi,
     inheritor: inheritorApi,
     exhibition: exhibitionApi,
+    article: articleApi,
+    photo: photoApi,
     news: newsApi,
     user: userApi,
     common: commonApi,
     auth: authApi,
 }
-

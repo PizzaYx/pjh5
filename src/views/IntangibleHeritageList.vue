@@ -1,7 +1,7 @@
 <template>
     <div class="intangible-heritage-container">
         <!-- 顶部导航栏 -->
-        <van-nav-bar title="非遗项目" fixed placeholder :border="false" @click-left="onClickLeft">
+        <van-nav-bar title="非遗项目2" fixed placeholder :border="false" @click-left="onClickLeft">
             <template #left>
                 <van-icon name="arrow-left" class="back-icon" />
             </template>
@@ -53,9 +53,9 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { showToast } from 'vant';
-import api, { type ProjectItem } from '@/api/index';
+import api from '@/api/index';
 
 // 导入图片资源
 import chooseImg from '@/assets/img/choose.png';
@@ -63,20 +63,24 @@ import noChooseImg from '@/assets/img/noChoose.png';
 
 const router = useRouter();
 
-// 扩展 ProjectItem 类型以包含模拟字段
-interface ExtendedProjectItem extends ProjectItem {
-    level?: string;
-    address?: string;
+// 列表项类型（根据接口返回进行映射）
+interface ProjectCardItem {
+    id: string | number
+    img2: string
+    title: string
+    level?: string
+    address?: string
 }
 
 // 状态
 const searchValue = ref('');
-const list = ref<ExtendedProjectItem[]>([]);
+const list = ref<ProjectCardItem[]>([]);
 const loading = ref(false);
 const finished = ref(false);
 const refreshing = ref(false);
 const pageNum = ref(1);
-const pageSize = 20;
+const route = useRoute();
+const classid = Number(route.query.id) || 0;
 const currentCategory = ref('all');
 
 // 分类数据
@@ -109,19 +113,20 @@ const onLoad = async () => {
             pageNum.value = 1;
         }
 
-        const response = await api.project.getProjectList(pageNum.value, pageSize);
+        const response = await api.project.getProjectList(classid);
 
-        if (response.code === 200 && response.data) {
-            const newData = response.data.list.map(item => ({
-                ...item,
-                // 模拟数据
+        if ((response.code === 1200 || response.code === 0) && response.data && response.data.records) {
+            const newData: ProjectCardItem[] = (response.data.records as any[]).map((item: any) => ({
+                id: item.classid,
+                img2: item.imgmax || item.imgmin || '',
+                title: item.name || '',
                 level: ['国家级', '省级', '市级'][Math.floor(Math.random() * 3)],
-                address: ['济南市历下区', '青岛市市南区', '淄博市张店区'][Math.floor(Math.random() * 3)]
+                address: ['济南市历下区', '青岛市市南区', '淄博市张店区'][Math.floor(Math.random() * 3)],
             }));
 
             list.value.push(...newData);
             pageNum.value++;
-            if (newData.length < pageSize) finished.value = true;
+            finished.value = true;
         } else {
             finished.value = true;
         }
@@ -139,7 +144,7 @@ const onRefresh = () => {
     onLoad();
 };
 
-const handleDetail = (item: ExtendedProjectItem) => {
+const handleDetail = (item: ProjectCardItem) => {
     showToast(`查看详情: ${item.title}`);
 };
 </script>
