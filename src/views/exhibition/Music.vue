@@ -94,7 +94,7 @@ const handleDetail = (item: PlateArticleList) => {
     const aid = String(item.id || '')
     const title = String(item.title || item.simpletitle || '音乐')
     if (!aid) return
-    router.push({ path: '/exhibition-music-detail', query: { aid, title } })
+    router.push({ path: '/article-detail', query: { aid, title } })
 }
 </script>
 

@@ -1,6 +1,6 @@
 <template>
     <div class="exhibition-container">
-        <van-nav-bar title="音乐" fixed placeholder :border="false" @click-left="onClickLeft">
+        <van-nav-bar :title="pageTitle" fixed placeholder :border="false" @click-left="onClickLeft">
             <template #left>
                 <van-icon name="arrow-left" class="back-icon" />
             </template>
@@ -12,7 +12,6 @@
                     <h2 class="title">{{ article?.title || pageTitle }}</h2>
                     <div class="meta-row">
                         <span class="meta-item">时间：{{ formatTime(article?.publishtime) || '-' }}</span>
-                        <!-- <span class="meta-item">点击：{{ article?.click || 0 }}</span> -->
                     </div>
                 </div>
                 <div class="rich-content" v-html="article?.content || ''"></div>
@@ -35,7 +34,7 @@ const loading = ref(false)
 const article = ref<GetArticle | null>(null)
 
 const aid = computed(() => String(route.query.aid || ''))
-const pageTitle = computed(() => String(route.query.title || '音乐'))
+const pageTitle = computed(() => String(route.query.title || '新闻'))
 
 const onClickLeft = () => {
     router.back()
@@ -50,7 +49,7 @@ const fetchDetail = async () => {
             article.value = response.data
         }
     } catch (error) {
-        console.error('获取音乐详情失败:', error)
+        console.error('获取详情失败:', error)
     } finally {
         loading.value = false
     }
@@ -129,4 +128,3 @@ const formatTime = (ts?: number) => {
     color: #333;
 }
 </style>
-

@@ -11,7 +11,7 @@
             <!-- 轮播图 -->
             <van-swipe v-else-if="banners.length > 0" class="my-swipe" :autoplay="3000" :show-indicators="false"
                 @change="onBannerChange">
-                <van-swipe-item v-for="item in banners" :key="item.id">
+                <van-swipe-item v-for="item in banners" :key="item.id" @click="handleBannerClick(item)">
                     <img :src="item.imgpath1" :alt="item.title" class="banner-img" />
                 </van-swipe-item>
             </van-swipe>
@@ -279,6 +279,28 @@ const fetchBanners = async () => {
         loading.value = false;
     }
 };
+
+// Banner点击跳转：1->文章详情，2->相册详情，5->视频详情
+const handleBannerClick = (item: PlateArticleList) => {
+    const type = Number(item?.type || 0);
+    const aid = String(item?.id || '');
+    const title = String(item?.title || item?.simpletitle || '新闻');
+    if (!aid) return;
+    switch (type) {
+        case 1:
+            router.push({ path: '/article-detail', query: { aid, title } });
+            break;
+        case 2:
+            router.push({ path: '/exhibition-album-detail', query: { aid, title } });
+            break;
+        case 5:
+            router.push({ path: '/exhibition-video-detail', query: { aid, title, type } });
+            break;
+        default:
+            router.push({ path: '/article-detail', query: { aid, title } });
+            break;
+    }
+}
 
 
 // 获取导航模块数据

@@ -57,15 +57,6 @@ const routes: RouteRecordRaw[] = [
         },
     },
     {
-        path: '/exhibition-music-detail',
-        name: 'ExhibitionMusicDetail',
-        component: () => import('@/views/exhibition/MusicDetail.vue'),
-        meta: {
-            title: '音乐',
-            keepAlive: false,
-        },
-    },
-    {
         path: '/exhibition-show',
         name: 'ExhibitionShow',
         component: () => import('@/views/exhibition/Show.vue'),
@@ -75,11 +66,11 @@ const routes: RouteRecordRaw[] = [
         },
     },
     {
-        path: '/exhibition-show-detail',
-        name: 'ExhibitionShowDetail',
-        component: () => import('@/views/exhibition/ShowDetail.vue'),
+        path: '/article-detail',
+        name: 'ArticleDetail',
+        component: () => import('@/views/common/ArticleDetail.vue'),
         meta: {
-            title: '展览',
+            title: '新闻',
             keepAlive: false,
         },
     },
