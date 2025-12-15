@@ -1,7 +1,7 @@
 // API 接口统一管理
 import { get, post, put } from '@/utils/request'
 import { API_CONFIG } from '@/config/api.config'
-import { PlateArticleList, ModeTemplate, GetArticlePhotos, VideoCommentData, GetArticle } from '@/models'
+import { PlateArticleList, ModeTemplate, GetArticlePhotos, VideoCommentData, GetArticle, InheritorItem, HeritageItem } from '@/models'
 
 // ========== 响应数据类型 ==========
 export interface Response<T = any> {
@@ -107,16 +107,34 @@ export const projectApi = {
 
 // ========== 非遗传承人模块 ==========
 export const inheritorApi = {
-    async getInheritorPage(pageNum: number = 1, level: string = '', name: string = ''): Promise<Response<any[]>> {
+    async getInheritorPage(pageNum: number = 1, level: string = '', name: string = ''): Promise<Response<InheritorItem[]>> {
         const response = await get<Response<any[]>>('/intangibleheritage/getInheritorPage', {
             pageNum,
             level,
             name,
         })
+        const list = (response.data || []).map((item: any) => new InheritorItem(item))
         return {
             code: response.code,
             msg: response.msg,
-            data: response.data || [],
+            data: list,
+        }
+    },
+    async getInheritorTypeNum(): Promise<Response<Array<{ num: number; type: string }>>> {
+        const response = await get<Response<any>>('/intangibleheritage/getInheritorTypeNum')
+        const list = Array.isArray(response.data) ? response.data : []
+        return {
+            code: response.code,
+            msg: response.msg,
+            data: list,
+        }
+    },
+    async getInheritorById(id: string | number): Promise<Response<InheritorItem>> {
+        const response = await get<Response<any>>('/intangibleheritage/getInheritorById', { id })
+        return {
+            code: response.code,
+            msg: response.msg,
+            data: new InheritorItem(response.data || {}),
         }
     },
 }
@@ -290,6 +308,45 @@ export const newsApi = {
     },
 }
 
+// ========== 非遗项目分页 ==========
+export const heritageApi = {
+    async getHeritagePage(pageNum: number = 1, category: string = '', level: string = '', name: string = ''): Promise<Response<HeritageItem[]>> {
+        const lvl = String(level || '').trim()
+        const levelParam = (lvl === '全部' ? '' : lvl)
+        const response = await get<Response<any[]>>('/intangibleheritage/getHeritagePage', {
+            pageNum,
+            category,
+            level: levelParam,
+            name,
+        })
+        const list = (response.data || []).map((item: any) => new HeritageItem(item))
+        return {
+            code: response.code,
+            msg: response.msg,
+            data: list,
+        }
+    },
+    async getHeritageById(id: string | number): Promise<Response<HeritageItem>> {
+        const response = await get<Response<any>>('/intangibleheritage/getHeritageById', {
+            id,
+        })
+        return {
+            code: response.code,
+            msg: response.msg,
+            data: new HeritageItem(response.data || {}),
+        }
+    },
+    async getHeritageTypeNum(): Promise<Response<Array<{ num: number; type: string }>>> {
+        const response = await get<Response<any>>('intangibleheritage/getHeritageTypeNum')
+        const list = Array.isArray(response.data) ? response.data : []
+        return {
+            code: response.code,
+            msg: response.msg,
+            data: list,
+        }
+    },
+}
+
 // 示例：用户相关 API
 export const userApi = {
     // 登录
@@ -337,6 +394,7 @@ export default {
     article: articleApi,
     photo: photoApi,
     news: newsApi,
+    heritage: heritageApi,
     user: userApi,
     common: commonApi,
     auth: authApi,

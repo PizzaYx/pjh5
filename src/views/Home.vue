@@ -82,11 +82,11 @@
                 </div>
 
                 <div v-else class="scroll-container">
-                    <div class="inheritor-card" v-for="item in inheritors" :key="item.id">
-                        <img :src="sanitizeImage(item.image) || imageDealWith(item.img || item.imgpath1 || item.imgmin || item.imgmax || '')"
-                            class="inheritor-img" />
+                    <div class="inheritor-card" v-for="item in inheritors" :key="item.id"
+                        @click="handleInheritorDetail(item)">
+                        <img :src="item.image" class="inheritor-img" />
                         <div class="overlay">
-                            <span>{{ item.name || item.title }}</span>
+                            <span>{{ item.name }}</span>
                         </div>
                     </div>
                 </div>
@@ -152,6 +152,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { showToast } from 'vant';
 import api from '../api/index';
+import { InheritorItem } from '@/models';
 import { imageDealWith } from '@/utils/image';
 import { PlateArticleList, Records } from '@/models';
 
@@ -177,7 +178,7 @@ const projects = ref<Records[]>([]);
 const projectLoading = ref(true);
 
 // 4. 传承人 (横向滚动)
-const inheritors = ref<any[]>([]);
+const inheritors = ref<InheritorItem[]>([]);
 const inheritorLoading = ref(true);
 
 // 5. 网上展厅 (2x2)
@@ -231,6 +232,13 @@ const handleBtn = (id: string | number, section: string) => {
 const handleDetail = (id: string | number) => {
     // 将项 id 传给详情页，避免未使用参数的 lint 报错
     router.push({ path: '/intangible-heritage-list', query: { id: String(id) } });
+}
+
+// 传承人卡片点击事件
+const handleInheritorDetail = (item: InheritorItem) => {
+    const id = String(item?.id || '');
+    if (!id) return;
+    router.push({ path: '/inheritor-detail', query: { id, title: item.name } });
 }
 
 // 展厅卡片点击事件
@@ -317,7 +325,6 @@ const fetchInheritors = async () => {
         // 获取第一页
         const response = await api.inheritor.getInheritorPage(1, '', '');
         if (response.code === 1200 && Array.isArray(response.data)) {
-            // 首页仅展示前 8 个
             inheritors.value = response.data.slice(0, 8);
         }
     } catch (error) {
@@ -366,10 +373,6 @@ const handleNewsDetail = (item: any) => {
 
 const formatImg = (p?: string) => {
     return imageDealWith(p || '');
-};
-const sanitizeImage = (img?: string) => {
-    if (!img) return '';
-    return String(img).replace(/[`\s]/g, '');
 };
 const formatNewsDate = (ts?: number) => {
     if (!ts) return '';

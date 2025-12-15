@@ -65,7 +65,7 @@ const loadProjects = async () => {
     }
 
     const response = await api.project.getProjectList(classid);
-    if (response.code === 1200 && response.data?.records) {
+    if ((response.code === 1200 || response.code === 0 || response.code === 200) && response.data?.records) {
         list.value = response.data.records;
     }
     finished.value = true; // 接口一次性返回全部数据

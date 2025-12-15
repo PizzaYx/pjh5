@@ -279,3 +279,81 @@ export class GetArticle {
         this.creater = json['creater'] || ''
     }
 }
+
+export class InheritorItem {
+    id: string = ''
+    name: string = ''
+    gender: string = ''
+    nation: string = ''
+    birthday: string = ''
+    region: string = ''
+    level: string = ''
+    projectName: string = ''
+    image: string = ''
+    intro: string = ''
+    imgList: Array<{ id: string; image: string; type: number; sortOrder?: number; appIntangibleId?: string }> = []
+
+    constructor(json: any = {}) {
+        if (!json) return
+        this.id = json['id'] || ''
+        this.name = json['name'] || ''
+        this.gender = json['gender'] || ''
+        this.nation = json['nation'] || ''
+        this.birthday = json['birthday'] || ''
+        this.region = json['region'] || ''
+        this.level = json['level'] || ''
+        this.projectName = json['projectName'] || ''
+        const img = json['image'] || ''
+        this.image = imageDealWith(String(img)) || ''
+        this.intro = json['intro'] || ''
+        if (Array.isArray(json['imgList'])) {
+            this.imgList = json['imgList'].map((v: any) => {
+                const raw = String(v?.image || '')
+                return {
+                    id: v?.id || '',
+                    image: imageDealWith(raw) || '',
+                    type: Number(v?.type) || 0,
+                    sortOrder: v?.sortOrder != null ? Number(v?.sortOrder) : undefined,
+                    appIntangibleId: v?.appIntangibleId || undefined,
+                }
+            })
+        }
+    }
+}
+
+export class HeritageItem {
+    id: string = ''
+    name: string = ''
+    category: string = ''
+    level: string = ''
+    region: string = ''
+    protectionUnit: string = ''
+    image: string = ''
+    intro: string = ''
+    imgList: Array<{ id: string; image: string; type: number; sortOrder?: number; appIntangibleId?: string }> = []
+
+    constructor(json: any = {}) {
+        if (!json) return
+        this.id = json['id'] || ''
+        this.name = json['name'] || ''
+        this.category = json['category'] || ''
+        this.level = json['level'] || ''
+        this.region = json['region'] || ''
+        this.protectionUnit = json['protectionUnit'] || ''
+        const img = json['image'] || ''
+        this.image = imageDealWith(String(img)) || ''
+        this.intro = json['intro'] || ''
+        if (Array.isArray(json['imgList'])) {
+            this.imgList = json['imgList'].map((v: any) => {
+                const raw = String(v?.image || '')
+                return {
+                    id: v?.id || '',
+                    image: imageDealWith(raw) || '',
+                    type: Number(v?.type) || 0,
+                    sortOrder: v?.sortOrder != null ? Number(v?.sortOrder) : undefined,
+                    appIntangibleId: v?.appIntangibleId || undefined,
+                }
+            })
+        }
+    }
+}

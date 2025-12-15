@@ -138,6 +138,24 @@ const routes: RouteRecordRaw[] = [
         },
     },
     {
+        path: '/intangible-heritage-detail',
+        name: 'IntangibleHeritageDetail',
+        component: () => import('@/views/heritage/Detail.vue'),
+        meta: {
+            title: '非遗项目',
+            keepAlive: false,
+        },
+    },
+    {
+        path: '/inheritor-detail',
+        name: 'InheritorDetail',
+        component: () => import('@/views/inheritor/Detail.vue'),
+        meta: {
+            title: '非遗传承人',
+            keepAlive: false,
+        },
+    },
+    {
         path: '/:pathMatch(.*)*',
         name: 'NotFound',
         component: () => import('@/views/NotFound.vue'),

@@ -1,7 +1,7 @@
 <template>
     <div class="intangible-heritage-container">
         <!-- 顶部导航栏 -->
-        <van-nav-bar title="非遗项目2" fixed placeholder :border="false" @click-left="onClickLeft">
+        <van-nav-bar title="非遗项目" fixed placeholder :border="false" @click-left="onClickLeft">
             <template #left>
                 <van-icon name="arrow-left" class="back-icon" />
             </template>
@@ -28,20 +28,22 @@
 
         <!-- 列表 -->
         <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
-            <van-list v-model:loading="loading" :finished="finished" finished-text="没有更多了" @load="onLoad">
+            <van-list v-model:loading="loading" :finished="finished" finished-text="没有更多了" :immediate-check="false"
+                @load="onLoad">
                 <div class="project-list">
                     <div class="project-card" v-for="item in list" :key="item.id" @click="handleDetail(item)">
                         <div class="img-box">
-                            <img :src="item.img2" loading="lazy" />
+                            <img :src="formatImg(item.image)" loading="lazy" />
                         </div>
                         <div class="info-box">
-                            <div class="title van-ellipsis">{{ item.title }}</div>
+                            <div class="title van-ellipsis">{{ item.name }}</div>
                             <div class="tag-row">
-                                <span class="tag">{{ item.level || '国家级' }}</span>
+                                <span class="tag">{{ item.level }}</span>
+                                <span class="tag">{{ item.category }}</span>
                             </div>
                             <div class="address-row">
-                                <van-icon name="location-o" />
-                                <span class="address">{{ item.address || '山东省' }}</span>
+                                <img :src="localIcon" class="addr-icon" />
+                                <span class="address">{{ item.region }}</span>
                             </div>
                         </div>
                     </div>
@@ -52,45 +54,45 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { showToast } from 'vant';
 import api from '@/api/index';
+import { imageDealWith } from '@/utils/image';
+import { HeritageItem } from '@/models';
+type CategoryItem = { id: string; name: string; count: number };
 
 // 导入图片资源
 import chooseImg from '@/assets/img/choose.png';
 import noChooseImg from '@/assets/img/noChoose.png';
+import localIcon from '@/assets/img/local.png';
 
 const router = useRouter();
 
-// 列表项类型（根据接口返回进行映射）
-interface ProjectCardItem {
-    id: string | number
-    img2: string
-    title: string
-    level?: string
-    address?: string
-}
-
 // 状态
 const searchValue = ref('');
-const list = ref<ProjectCardItem[]>([]);
+const list = ref<HeritageItem[]>([]);
 const loading = ref(false);
 const finished = ref(false);
 const refreshing = ref(false);
 const pageNum = ref(1);
+const fromRefresh = ref(false);
 const route = useRoute();
-const classid = Number(route.query.id) || 0;
+const category = String(route.query.category || '');
 const currentCategory = ref('all');
+const currentLevelName = computed(() => {
+    const hit = categories.value.find((c) => c.id === currentCategory.value);
+    return hit ? hit.name : '全部';
+});
 
 // 分类数据
-const categories = [
-    { id: 'all', name: '全部', count: 156 },
-    { id: 'national', name: '国家级', count: 42 },
-    { id: 'provincial', name: '省级', count: 35 },
-    { id: 'city', name: '市级', count: 28 },
-    { id: 'district', name: '区县级', count: 51 },
-];
+const categories = ref<CategoryItem[]>([
+    { id: 'all', name: '全部', count: 0 },
+    { id: 'national', name: '国家级', count: 0 },
+    { id: 'provincial', name: '省级', count: 0 },
+    { id: 'city', name: '市级', count: 0 },
+    { id: 'district', name: '区县级', count: 0 },
+]);
 
 const onClickLeft = () => router.back();
 
@@ -107,26 +109,28 @@ const onSearch = (val: string) => {
 
 const onLoad = async () => {
     try {
+        // 防止切换分类后 van-list 为填充视口而立即二次触发加载（pageNum=2）
+        if (fromRefresh.value && !refreshing.value && pageNum.value > 1) {
+            loading.value = false;
+            fromRefresh.value = false; // 只屏蔽这一次自动触发，后续正常分页
+            return;
+        }
+
         if (refreshing.value) {
             list.value = [];
             refreshing.value = false;
             pageNum.value = 1;
         }
 
-        const response = await api.project.getProjectList(classid);
+        const response = await api.heritage.getHeritagePage(pageNum.value, category, currentLevelName.value, searchValue.value);
 
-        if ((response.code === 1200 || response.code === 0) && response.data && response.data.records) {
-            const newData: ProjectCardItem[] = (response.data.records as any[]).map((item: any) => ({
-                id: item.classid,
-                img2: item.imgmax || item.imgmin || '',
-                title: item.name || '',
-                level: ['国家级', '省级', '市级'][Math.floor(Math.random() * 3)],
-                address: ['济南市历下区', '青岛市市南区', '淄博市张店区'][Math.floor(Math.random() * 3)],
-            }));
-
-            list.value.push(...newData);
+        if (response.code === 1200 && Array.isArray(response.data)) {
+            const rawList = response.data || [];
+            list.value.push(...rawList);
             pageNum.value++;
-            finished.value = true;
+            if (rawList.length === 0) {
+                finished.value = true;
+            }
         } else {
             finished.value = true;
         }
@@ -138,19 +142,58 @@ const onLoad = async () => {
     }
 };
 
+const fetchCategoryCounts = async () => {
+    try {
+        const r = await api.heritage.getHeritageTypeNum();
+        if (r.code === 1200 && Array.isArray(r.data)) {
+            const typeMap: Record<string, string> = {
+                '国家级': 'national',
+                '省级': 'provincial',
+                '市级': 'city',
+                '区县级': 'district',
+            };
+            const counts: Record<string, number> = {};
+            for (const it of r.data) {
+                const key = typeMap[String(it.type)];
+                if (key) counts[key] = Number(it.num || 0);
+            }
+            const total = ['national', 'provincial', 'city', 'district'].reduce((sum, k) => sum + Number(counts[k] || 0), 0);
+            categories.value = categories.value.map((it) => {
+                if (it.id === 'all') return { ...it, count: total };
+                return { ...it, count: Number(counts[it.id] || 0) };
+            });
+        }
+    } catch (e) {
+        console.error('获取分类数量失败:', e);
+    }
+};
+
+fetchCategoryCounts();
+
 const onRefresh = () => {
     finished.value = false;
     loading.value = true;
+    refreshing.value = true;
+    fromRefresh.value = true;
     onLoad();
 };
 
-const handleDetail = (item: ProjectCardItem) => {
-    showToast(`查看详情: ${item.title}`);
+onMounted(() => {
+    onRefresh();
+});
+
+const handleDetail = (item: any) => {
+    const id = String((item as HeritageItem).id || '');
+    if (!id) return;
+    router.push({ path: '/intangible-heritage-detail', query: { id } });
 };
+
+const formatImg = (p?: string) => imageDealWith(p || '');
 </script>
 
 <style scoped lang="scss">
 @use '@/styles/list-page-common.scss' as common;
+@use '@/styles/variables.scss' as *;
 
 .intangible-heritage-container {
     @include common.list-page-container;
@@ -164,7 +207,7 @@ const handleDetail = (item: ProjectCardItem) => {
 .filter-section {
     display: flex;
     justify-content: space-between; // 两端对齐，或者使用 flex-start 加 gap
-    padding: 0 12px;
+    padding: 16px 12px;
     margin-top: 10px;
     overflow-x: auto; // 如果放不下，允许横向滚动
     gap: 8px; // 间距
@@ -176,8 +219,8 @@ const handleDetail = (item: ProjectCardItem) => {
 
     .filter-item {
         position: relative;
-        width: 68px; // 根据图片尺寸调整
-        height: 68px; // 根据图片尺寸调整
+        width: 52px; // 根据图片尺寸调整
+        height: 52px; // 根据图片尺寸调整
         flex-shrink: 0;
         display: flex;
         align-items: center;
@@ -229,15 +272,15 @@ const handleDetail = (item: ProjectCardItem) => {
 
 // 搜索框样式
 :deep(.custom-search) {
-    background: transparent !important;
-    padding: 0;
-    margin: 15px 12px;
-    height: 36px;
+    background: #FFFFFF !important;
+    height: 32px;
+    padding: 0 0;
+    margin: 0 12px;
+    text-align: left;
 
     .van-search__content {
         background: #FFFFFF;
-        border-radius: 18px;
-        padding-left: 10px;
+        border-radius: 8px;
 
         .van-field__control {
             background: #FFFFFF;
@@ -249,29 +292,31 @@ const handleDetail = (item: ProjectCardItem) => {
 // 列表样式
 .project-list {
     display: grid;
-    grid-template-columns: repeat(2, 1fr); // 两列
+    grid-template-columns: repeat(2, 1fr);
     gap: 10px;
     padding: 0 12px 20px;
+    margin-top: 10px; // 搜索与列表间距 10px
 
     .project-card {
+        width: 171px;
+        height: 185px;
         background: #FFFFFF;
-        border-radius: 8px;
+        box-shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.2);
+        border-radius: 4px;
         overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         display: flex;
         flex-direction: column;
+        justify-self: center; // 居中对齐
 
         .img-box {
-            width: 100%;
-            height: 0;
-            padding-bottom: 75%; // 4:3 比例
-            position: relative;
+            width: calc(100% - 20px); // 左右各10px
+            height: 86px;
+            margin: 10px 10px 0 10px; // 上左右边距10px
             background: #f5f5f5;
+            border-radius: 4px;
+            overflow: hidden;
 
             img {
-                position: absolute;
-                top: 0;
-                left: 0;
                 width: 100%;
                 height: 100%;
                 object-fit: cover;
@@ -279,37 +324,77 @@ const handleDetail = (item: ProjectCardItem) => {
         }
 
         .info-box {
-            padding: 8px;
+            padding: 8px 8px 12px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
 
             .title {
+                width: 141px;
+                height: 19px;
+                font-family: $font-family-serif;
+                font-weight: 500;
                 font-size: 14px;
-                font-weight: bold;
-                color: #333;
+                color: #3D3D3D;
                 margin-bottom: 6px;
-                line-height: 1.4;
+                line-height: 20px;
+                text-align: left;
+                font-style: normal;
+                text-transform: none;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                overflow: hidden;
             }
 
             .tag-row {
-                margin-bottom: 6px;
+                margin-top: 5px;
+                margin-bottom: 5px;
+                display: flex;
+                gap: 6px;
 
                 .tag {
-                    display: inline-block;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: flex-start;
+                    height: 15px;
+                    background: #D5A85A;
+                    border-radius: 2px;
+                    font-family: $font-family-serif;
+                    font-weight: 400;
                     font-size: 10px;
-                    color: #6C2701;
-                    background: rgba(108, 39, 1, 0.1);
+                    color: #FFFFFF;
+                    line-height: 14px;
+                    text-align: left;
+                    font-style: normal;
+                    text-transform: none;
                     padding: 2px 6px;
-                    border-radius: 4px;
+                    white-space: nowrap;
                 }
             }
 
             .address-row {
                 display: flex;
                 align-items: center;
-                color: #999;
-                font-size: 11px;
+                margin-top: auto;
 
-                .van-icon {
+                .addr-icon {
+                    width: 12px;
+                    height: 12px;
                     margin-right: 2px;
+                    display: inline-block;
+                }
+
+                .address {
+                    width: 36px;
+                    height: 17px;
+                    font-family: $font-family-serif;
+                    font-weight: 500;
+                    font-size: 12px;
+                    color: rgba(61, 61, 61, 0.5);
+                    line-height: 17px;
+                    text-align: left;
+                    font-style: normal;
+                    text-transform: none;
                 }
             }
         }
