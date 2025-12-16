@@ -52,7 +52,7 @@
             <!-- 3. 非遗项目 -->
             <div class="section">
                 <div class="section-header">
-                    <h3 class="title">非遗项目</h3>
+                    <h3 class="title">非遗项目1</h3>
                     <span class="more" @click="handleMore('非遗项目')">全部 <van-icon name="arrow" /></span>
                 </div>
 
