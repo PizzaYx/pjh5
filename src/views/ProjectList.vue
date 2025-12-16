@@ -39,7 +39,7 @@ const router = useRouter();
 const list = ref<Records[]>([]);
 const loading = ref(false);
 const finished = ref(false);
-const refreshing = ref(false);
+// const refreshing = ref(false);
 const projectClassId = ref<number | null>(
     Number(route.query.classid ?? route.params.classid ?? route.query.classId ?? route.params.classId) || null,
 );

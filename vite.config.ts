@@ -26,17 +26,9 @@ export default defineConfig({
       '@': resolve(__dirname, 'src'),
     },
   },
+  base:'./',  //设置打包路径
   server: {
-    host: '0.0.0.0',
-    port: 5173,
-    open: true,
-    proxy: {
-      '/api': {
-        target: 'http://your-api-url.com', // 替换为你的API地址
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
-      },
-    },
+    host: true // 启用本机ip
   },
   build: {
     outDir: 'dist',

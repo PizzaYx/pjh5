@@ -29,7 +29,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { showToast } from 'vant'
+// import { showToast } from 'vant'
 import { articleApi } from '@/api/index'
 import { PlateArticleList } from '@/models'
 
