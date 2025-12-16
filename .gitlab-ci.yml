@@ -5,7 +5,7 @@ package:
   tags:
   - whtf_ai
   script:
-  - yarn
-  - yarn build
-  - rm -rf /datastorage/webserver/files/webserver/web/html/pjfy*
+  # - yarn
+  # - yarn build
+  # - rm -rf /datastorage/webserver/files/webserver/web/html/pjfy*
   - \cp -r ./dist/* /datastorage/webserver/files/webserver/web/html/pjfy

@@ -3,12 +3,9 @@
     "private": true,
     "version": "1.0.0",
     "type": "module",
-    "engines": {
-        "node": ">=16.18.0"
-    },
     "scripts": {
         "dev": "vite",
-        "build": "vite build --target node16",
+        "build": "vue-tsc -b && vite build",
         "preview": "vite preview"
     },
     "dependencies": {
