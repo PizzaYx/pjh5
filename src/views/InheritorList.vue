@@ -1,51 +1,53 @@
 <template>
     <div class="intangible-heritage-container">
         <!-- 顶部导航栏 -->
-        <van-nav-bar title="非遗传承人" fixed placeholder :border="false" @click-left="onClickLeft">
+        <van-nav-bar title="非遗传承人" :border="false" @click-left="onClickLeft">
             <template #left>
                 <van-icon name="arrow-left" class="back-icon" />
             </template>
         </van-nav-bar>
 
-        <!-- 筛选区域 -->
-        <div class="filter-section">
-            <div v-for="item in categories" :key="item.id" class="filter-item"
-                :class="{ active: currentCategory === item.id }" @click="handleCategoryChange(item.id)">
-                <img :src="currentCategory === item.id ? chooseImg : noChooseImg" class="bg-img" />
-                <div class="content">
-                    <span class="count">{{ item.count }}</span>
-                    <span class="label">{{ item.name }}</span>
+        <div class="scroll-content">
+            <!-- 筛选区域 -->
+            <div class="filter-section">
+                <div v-for="item in categories" :key="item.id" class="filter-item"
+                    :class="{ active: currentCategory === item.id }" @click="handleCategoryChange(item.id)">
+                    <img :src="currentCategory === item.id ? chooseImg : noChooseImg" class="bg-img" />
+                    <div class="content">
+                        <span class="count">{{ item.count }}</span>
+                        <span class="label">{{ item.name }}</span>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- 搜索框 -->
-        <van-search v-model="searchValue" placeholder="请输入搜索关键词" shape="round" background="transparent"
-            class="custom-search" @search="onSearch" />
+            <!-- 搜索框 -->
+            <van-search v-model="searchValue" placeholder="请输入搜索关键词" shape="round" background="transparent"
+                class="custom-search" @search="onSearch" />
 
-        <!-- 列表 -->
-        <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
-            <van-list v-model:loading="loading" :finished="finished" finished-text="没有更多了" :immediate-check="false"
-                @load="onLoad">
-                <div class="project-list">
-                    <div class="project-card" v-for="item in list" :key="item.id" @click="handleDetail(item)">
-                        <div class="img-box">
-                            <img :src="formatImg(item.image)" loading="lazy" />
-                        </div>
-                        <div class="info-box">
-                            <div class="title van-ellipsis">{{ item.name }}</div>
-                            <div class="tag-row">
-                                <span class="tag">{{ item.level }}</span>
+            <!-- 列表 -->
+            <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
+                <van-list v-model:loading="loading" :finished="finished" finished-text="没有更多了" :immediate-check="false"
+                    @load="onLoad">
+                    <div class="project-list">
+                        <div class="project-card" v-for="item in list" :key="item.id" @click="handleDetail(item)">
+                            <div class="img-box">
+                                <img :src="formatImg(item.image)" loading="lazy" />
                             </div>
-                            <div class="address-row">
-                                <img :src="localIcon" class="addr-icon" />
-                                <span class="address">{{ item.region }}</span>
+                            <div class="info-box">
+                                <div class="title van-ellipsis">{{ item.name }}</div>
+                                <div class="tag-row">
+                                    <span class="tag">{{ item.level }}</span>
+                                </div>
+                                <div class="address-row">
+                                    <img :src="localIcon" class="addr-icon" />
+                                    <span class="address">{{ item.region }}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </van-list>
-        </van-pull-refresh>
+                </van-list>
+            </van-pull-refresh>
+        </div>
     </div>
 </template>
 
@@ -182,6 +184,18 @@ onMounted(() => {
 
 .intangible-heritage-container {
     @include common.list-page-container;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.scroll-content {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: column;
 }
 
 // 使用蓝湖样式的导航栏

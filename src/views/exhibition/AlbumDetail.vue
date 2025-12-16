@@ -1,6 +1,6 @@
 <template>
     <div class="exhibition-container">
-        <van-nav-bar title="相册" fixed placeholder :border="false" @click-left="onClickLeft">
+        <van-nav-bar title="相册" fixed placeholder z-index="999" :border="false" @click-left="onClickLeft">
             <template #left>
                 <van-icon name="arrow-left" class="back-icon" />
             </template>

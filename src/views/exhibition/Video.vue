@@ -1,7 +1,7 @@
 <template>
     <div class="exhibition-container">
         <!-- 顶部导航栏 -->
-        <van-nav-bar title="视频" fixed placeholder :border="false" @click-left="onClickLeft">
+        <van-nav-bar title="视频" fixed placeholder z-index="999" :border="false" @click-left="onClickLeft">
             <template #left>
                 <van-icon name="arrow-left" class="back-icon" />
             </template>
@@ -152,7 +152,7 @@ const handleDetail = (item: PlateArticleList) => {
         }
 
         .item-info {
-            padding: 8px 12px;
+            padding: 0px 12px;
             margin: 0;
             display: flex;
             flex-direction: column;
@@ -161,6 +161,7 @@ const handleDetail = (item: PlateArticleList) => {
             flex: 1;
             min-height: 0;
             overflow: hidden;
+            justify-content: center;
 
             .item-title {
                 margin: 0;

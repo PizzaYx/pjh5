@@ -336,8 +336,8 @@ export const heritageApi = {
             data: new HeritageItem(response.data || {}),
         }
     },
-    async getHeritageTypeNum(): Promise<Response<Array<{ num: number; type: string }>>> {
-        const response = await get<Response<any>>('intangibleheritage/getHeritageTypeNum')
+    async getHeritageTypeNum(category: string): Promise<Response<Array<{ num: number; type: string }>>> {
+        const response = await get<Response<any>>('/intangibleheritage/getHeritageTypeNum', { category })
         const list = Array.isArray(response.data) ? response.data : []
         return {
             code: response.code,

@@ -1,27 +1,29 @@
 <template>
     <div class="exhibition-list-container">
         <!-- 顶部导航栏 -->
-        <van-nav-bar title="网上展厅" fixed placeholder :border="false" @click-left="onClickLeft">
+        <van-nav-bar title="非遗展览" :border="false" @click-left="onClickLeft">
             <template #left>
                 <van-icon name="arrow-left" class="back-icon" />
             </template>
         </van-nav-bar>
 
-        <!-- 项目列表 -->
-        <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
-            <van-list v-model:loading="loading" :finished="finished" finished-text="" @load="onLoad">
-                <div class="project-grid">
-                    <div class="project-item" v-for="item in list" :key="item.classid" @click="handleDetail(item)">
-                        <!-- 背景图 -->
-                        <img :src="item.imgmax" :alt="item.name" class="item-bg" loading="lazy" />
-                        <!-- 文字内容 -->
-                        <div class="info">
-                            <h3 class="title">{{ item.name }}</h3>
+        <div class="scroll-content">
+            <!-- 列表 -->
+            <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
+                <van-list v-model:loading="loading" :finished="finished" finished-text="" @load="onLoad">
+                    <div class="project-grid">
+                        <div class="project-item" v-for="item in list" :key="item.classid" @click="handleDetail(item)">
+                            <!-- 背景图 -->
+                            <img :src="item.imgmax" :alt="item.name" class="item-bg" loading="lazy" />
+                            <!-- 文字内容 -->
+                            <div class="info">
+                                <h3 class="title">{{ item.name }}</h3>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </van-list>
-        </van-pull-refresh>
+                </van-list>
+            </van-pull-refresh>
+        </div>
     </div>
 </template>
 
@@ -84,7 +86,7 @@ const onRefresh = () => {
 const handleDetail = (item: Records) => {
     // 根据 name 判断跳转到哪个子页面
     let path = '/exhibition-album'; // 默认相册
-    
+
     if (item.name.includes('音乐')) {
         path = '/exhibition-music';
     } else if (item.name.includes('展览')) {
@@ -94,7 +96,7 @@ const handleDetail = (item: Records) => {
     } else if (item.name.includes('相册')) {
         path = '/exhibition-album';
     }
-    
+
     // 跳转到子页面，传递 classid 参数
     router.push({ path, query: { classid: String(item.classid) } });
 };
@@ -106,6 +108,18 @@ const handleDetail = (item: Records) => {
 
 .exhibition-list-container {
     @include common.list-page-container;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.scroll-content {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: column;
 }
 
 // 使用蓝湖样式的导航栏

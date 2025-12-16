@@ -1,55 +1,57 @@
 <template>
     <div class="intangible-heritage-container">
         <!-- 顶部导航栏 -->
-        <van-nav-bar title="非遗项目" fixed placeholder :border="false" @click-left="onClickLeft">
+        <van-nav-bar title="非遗项目" :border="false" @click-left="onClickLeft">
             <template #left>
                 <van-icon name="arrow-left" class="back-icon" />
             </template>
         </van-nav-bar>
 
-        <!-- 筛选区域 -->
-        <div class="filter-section">
-            <div v-for="item in categories" :key="item.id" class="filter-item"
-                :class="{ active: currentCategory === item.id }" @click="handleCategoryChange(item.id)">
-                <!-- 背景图 -->
-                <img :src="currentCategory === item.id ? chooseImg : noChooseImg" class="bg-img" />
+        <div class="scroll-content">
+            <!-- 筛选区域 -->
+            <div class="filter-section">
+                <div v-for="item in categories" :key="item.id" class="filter-item"
+                    :class="{ active: currentCategory === item.id }" @click="handleCategoryChange(item.id)">
+                    <!-- 背景图 -->
+                    <img :src="currentCategory === item.id ? chooseImg : noChooseImg" class="bg-img" />
 
-                <!-- 内容：数字和文本 -->
-                <div class="content">
-                    <span class="count">{{ item.count }}</span>
-                    <span class="label">{{ item.name }}</span>
+                    <!-- 内容：数字和文本 -->
+                    <div class="content">
+                        <span class="count">{{ item.count }}</span>
+                        <span class="label">{{ item.name }}</span>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- 搜索框 -->
-        <van-search v-model="searchValue" placeholder="请输入搜索关键词" shape="round" background="transparent"
-            class="custom-search" @search="onSearch" />
+            <!-- 搜索框 -->
+            <van-search v-model="searchValue" placeholder="请输入搜索关键词" shape="round" background="transparent"
+                class="custom-search" @search="onSearch" />
 
-        <!-- 列表 -->
-        <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
-            <van-list v-model:loading="loading" :finished="finished" finished-text="没有更多了" :immediate-check="false"
-                @load="onLoad">
-                <div class="project-list">
-                    <div class="project-card" v-for="item in list" :key="item.id" @click="handleDetail(item)">
-                        <div class="img-box">
-                            <img :src="formatImg(item.image)" loading="lazy" />
-                        </div>
-                        <div class="info-box">
-                            <div class="title van-ellipsis">{{ item.name }}</div>
-                            <div class="tag-row">
-                                <span class="tag">{{ item.level }}</span>
-                                <span class="tag">{{ item.category }}</span>
+            <!-- 列表 -->
+            <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
+                <van-list v-model:loading="loading" :finished="finished" finished-text="没有更多了" :immediate-check="false"
+                    @load="onLoad">
+                    <div class="project-list">
+                        <div class="project-card" v-for="item in list" :key="item.id" @click="handleDetail(item)">
+                            <div class="img-box">
+                                <img :src="formatImg(item.image)" loading="lazy" />
                             </div>
-                            <div class="address-row">
-                                <img :src="localIcon" class="addr-icon" />
-                                <span class="address">{{ item.region }}</span>
+                            <div class="info-box">
+                                <div class="title van-ellipsis">{{ item.name }}</div>
+                                <div class="tag-row">
+                                    <span class="tag">{{ item.level }}</span>
+                                    <span class="tag">{{ item.category }}</span>
+                                </div>
+                                <div class="address-row">
+                                    <img :src="localIcon" class="addr-icon" />
+                                    <span class="address">{{ item.region }}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </van-list>
-        </van-pull-refresh>
+                </van-list>
+            </van-pull-refresh>
+        </div>
     </div>
 </template>
 
@@ -144,7 +146,7 @@ const onLoad = async () => {
 
 const fetchCategoryCounts = async () => {
     try {
-        const r = await api.heritage.getHeritageTypeNum();
+        const r = await api.heritage.getHeritageTypeNum(category);
         if (r.code === 1200 && Array.isArray(r.data)) {
             const typeMap: Record<string, string> = {
                 '国家级': 'national',
@@ -197,6 +199,18 @@ const formatImg = (p?: string) => imageDealWith(p || '');
 
 .intangible-heritage-container {
     @include common.list-page-container;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.scroll-content {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: column;
 }
 
 // 导航栏样式

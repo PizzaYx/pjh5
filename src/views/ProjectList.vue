@@ -1,33 +1,32 @@
 <template>
     <div class="exhibition-list-container">
         <!-- 顶部导航栏 -->
-        <van-nav-bar title="非遗项目" fixed placeholder :border="false" @click-left="onClickLeft">
+        <van-nav-bar title="非遗项目" :border="false" @click-left="onClickLeft">
             <template #left>
                 <van-icon name="arrow-left" class="back-icon" />
             </template>
         </van-nav-bar>
 
         <!-- 项目列表 -->
-        <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
-            <van-list v-model:loading="loading" :finished="finished" finished-text="" @load="onLoad">
-                <div class="project-grid">
-                    <div class="project-item" v-for="item in list" :key="item.classid"
-                        @click="handleDetail(item.classid)">
-                        <!-- 背景图 -->
-                        <img :src="item.imgmax" :alt="item.name" class="item-bg" loading="lazy" />
-                        <!-- 文字内容 -->
-                        <div class="info">
-                            <h3 class="title">{{ item.name }}</h3>
-                        </div>
-                    </div>
+        <!-- <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
+            <van-list v-model:loading="loading" :finished="finished" finished-text="" @load="onLoad"> -->
+        <div class="project-grid">
+            <div class="project-item" v-for="item in list" :key="item.classid" @click="handleDetail(item.name)">
+                <!-- 背景图 -->
+                <img :src="item.imgmax" :alt="item.name" class="item-bg" loading="lazy" />
+                <!-- 文字内容 -->
+                <div class="info">
+                    <h3 class="title">{{ item.name }}</h3>
                 </div>
-            </van-list>
-        </van-pull-refresh>
+            </div>
+        </div>
+        <!-- </van-list>
+        </van-pull-refresh> -->
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { showToast } from 'vant';
 import api from '@/api/index';
@@ -64,43 +63,56 @@ const loadProjects = async () => {
         return;
     }
 
-    const response = await api.project.getProjectList(classid);
-    if ((response.code === 1200 || response.code === 0 || response.code === 200) && response.data?.records) {
-        list.value = response.data.records;
-    }
-    finished.value = true; // 接口一次性返回全部数据
-};
-
-// 加载数据
-const onLoad = async () => {
+    loading.value = true;
     try {
-        if (refreshing.value) {
-            list.value = [];
-            refreshing.value = false;
-            finished.value = false;
+        const response = await api.project.getProjectList(classid);
+        if ((response.code === 1200 || response.code === 0 || response.code === 200) && response.data?.records) {
+            list.value = response.data.records;
         }
-
-        loading.value = true;
-        await loadProjects();
     } catch (error) {
         console.error('获取非遗项目列表失败:', error);
         showToast('获取非遗项目失败');
-        finished.value = true;
     } finally {
         loading.value = false;
+        finished.value = true;
     }
 };
 
+// 加载数据
+// const onLoad = async () => {
+//     try {
+//         if (refreshing.value) {
+//             list.value = [];
+//             refreshing.value = false;
+//             finished.value = false;
+//         }
+
+//         loading.value = true;
+//         await loadProjects();
+//     } catch (error) {
+//         console.error('获取非遗项目列表失败:', error);
+//         showToast('获取非遗项目失败');
+//         finished.value = true;
+//     } finally {
+//         loading.value = false;
+//     }
+// };
+
 // 下拉刷新
-const onRefresh = () => {
-    finished.value = false;
-    loading.value = true;
-    onLoad();
-};
+// const onRefresh = () => {
+//     finished.value = false;
+//     loading.value = true;
+//     onLoad();
+// };
+
+onMounted(() => {
+    loadProjects();
+});
 
 // 点击详情，传入项目 id 并通过 query 跳转到详情页
-const handleDetail = (id: string | number) => {
-    router.push({ path: '/intangible-heritage-list', query: { id: String(id) } });
+const handleDetail = (categoryName: string) => {
+    const category = String(categoryName || '');
+    router.push({ path: '/intangible-heritage-list', query: { category } });
 };
 </script>
 
@@ -110,6 +122,11 @@ const handleDetail = (id: string | number) => {
 
 .exhibition-list-container {
     @include common.list-page-container;
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 // 使用蓝湖样式的导航栏

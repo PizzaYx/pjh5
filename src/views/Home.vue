@@ -62,7 +62,7 @@
 
                 <div v-else class="project-grid">
                     <div class="project-card" v-for="item in projects" :key="item.classid"
-                        @click="handleDetail(item.classid)">
+                        @click="handleDetail(item.name)">
                         <!-- 使用 imgmin 作为背景图或直接显示 -->
                         <img :src="item.imgmin" :alt="item.name" class="card-bg" />
                         <span class="card-text">{{ item.name }}</span>
@@ -229,9 +229,9 @@ const handleBtn = (id: string | number, section: string) => {
     }
 };
 
-const handleDetail = (id: string | number) => {
-    // 将项 id 传给详情页，避免未使用参数的 lint 报错
-    router.push({ path: '/intangible-heritage-list', query: { id: String(id) } });
+const handleDetail = (categoryName: string) => {
+    const category = String(categoryName || '');
+    router.push({ path: '/intangible-heritage-list', query: { category } });
 }
 
 // 传承人卡片点击事件

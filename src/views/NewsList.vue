@@ -1,34 +1,38 @@
 <template>
     <div class="exhibition-list-container">
         <!-- 顶部导航栏 -->
-        <van-nav-bar title="非遗动态" fixed placeholder :border="false" @click-left="onClickLeft">
+        <van-nav-bar title="非遗动态" :border="false" @click-left="onClickLeft">
             <template #left>
                 <van-icon name="arrow-left" class="back-icon" />
             </template>
         </van-nav-bar>
 
-        <!-- 搜索框 -->
-        <van-search v-model="searchValue" placeholder="请输入搜索关键词" shape="round" background="transparent"
-            class="custom-search" @search="onSearch" />
+        <div class="scroll-content">
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <van-search v-model="searchValue" placeholder="请输入搜索关键词" shape="round" background="transparent"
+                    class="custom-search" @search="onSearch" />
+            </div>
 
-        <!-- 列表 -->
-        <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
-            <van-list v-model:loading="loading" :finished="finished" finished-text="" @load="onLoad">
-                <div class="news-list">
-                    <div class="news-card" v-for="item in list" :key="item.id" @click="handleDetail(item)">
-                        <div class="news-img-box">
-                            <img :src="formatImg(item.imgpath1)" loading="lazy" />
-                        </div>
-                        <div class="news-info">
-                            <p class="news-title van-multi-ellipsis--l2">{{ item.title }}</p>
-                            <p class="news-date">
-                                <van-icon name="calendar-o" /> {{ formatNewsDate(item.publishtime) }}
-                            </p>
+            <!-- 列表 -->
+            <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
+                <van-list v-model:loading="loading" :finished="finished" finished-text="" @load="onLoad">
+                    <div class="news-list">
+                        <div class="news-card" v-for="item in list" :key="item.id" @click="handleDetail(item)">
+                            <div class="news-img-box">
+                                <img :src="formatImg(item.imgpath1)" loading="lazy" />
+                            </div>
+                            <div class="news-info">
+                                <p class="news-title van-multi-ellipsis--l2">{{ item.title }}</p>
+                                <p class="news-date">
+                                    <van-icon name="calendar-o" /> {{ formatNewsDate(item.publishtime) }}
+                                </p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </van-list>
-        </van-pull-refresh>
+                </van-list>
+            </van-pull-refresh>
+        </div>
     </div>
 </template>
 
@@ -119,6 +123,18 @@ const formatNewsDate = (ts?: number) => {
 
 .exhibition-list-container {
     @include common.list-page-container;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.scroll-content {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: column;
 }
 
 // 使用蓝湖样式的导航栏
@@ -144,6 +160,10 @@ const formatNewsDate = (ts?: number) => {
             text-align: left;
         }
     }
+}
+
+.search-container {
+    margin-top: 12px;
 }
 
 .news-list {

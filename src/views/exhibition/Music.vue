@@ -1,7 +1,7 @@
 <template>
     <div class="exhibition-container">
         <!-- 顶部导航栏 -->
-        <van-nav-bar title="音乐" fixed placeholder :border="false" @click-left="onClickLeft">
+        <van-nav-bar title="音乐" fixed placeholder z-index="999" :border="false" @click-left="onClickLeft">
             <template #left>
                 <van-icon name="arrow-left" class="back-icon" />
             </template>
@@ -150,12 +150,11 @@ const handleDetail = (item: PlateArticleList) => {
         }
 
         .item-info {
-            padding: 8px 12px;
-            margin: 0;
+            padding: 0px 12px;
             display: flex;
             flex-direction: column;
             align-items: flex-start;
-            justify-content: flex-start;
+            justify-content: center;
             flex: 1;
             min-height: 0;
             overflow: hidden;
@@ -171,10 +170,11 @@ const handleDetail = (item: PlateArticleList) => {
                 font-style: normal;
                 text-transform: none;
                 width: 100%;
-                white-space: nowrap;
-                overflow: hidden;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
                 line-clamp: 2;
-                text-overflow: ellipsis;
+                overflow: hidden;
             }
         }
     }

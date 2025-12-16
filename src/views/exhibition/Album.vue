@@ -1,7 +1,7 @@
 <template>
     <div class="exhibition-container">
         <!-- 顶部导航栏 -->
-        <van-nav-bar title="相册" fixed placeholder :border="false" @click-left="onClickLeft">
+        <van-nav-bar title="相册" fixed placeholder z-index="999" :border="false" @click-left="onClickLeft">
             <template #left>
                 <van-icon name="arrow-left" class="back-icon" />
             </template>
@@ -18,7 +18,6 @@
                         <!-- 文字信息 -->
                         <div class="item-info">
                             <h3 class="item-title">{{ item.title || item.simpletitle }}</h3>
-                            <p class="item-desc">{{ item.intro || item.typelabel }}</p>
                         </div>
                     </div>
                 </div>
@@ -163,11 +162,11 @@ watch(classid, () => {
         }
 
         .item-info {
-            padding: 8px 12px;
+            padding: 0px 12px;
             display: flex;
             flex-direction: column;
             align-items: flex-start;
-            justify-content: flex-start;
+            justify-content: center;
             flex: 1;
 
             .item-title {

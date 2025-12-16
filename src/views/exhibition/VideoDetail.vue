@@ -1,6 +1,6 @@
 <template>
     <div class="exhibition-container">
-        <van-nav-bar title="视频" fixed placeholder :border="false" @click-left="onClickLeft">
+        <van-nav-bar title="视频" fixed placeholder z-index="999" :border="false" @click-left="onClickLeft">
             <template #left>
                 <van-icon name="arrow-left" class="back-icon" />
             </template>
@@ -9,21 +9,15 @@
         <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
             <div class="detail-page">
                 <div class="player">
-                    <video
-                        v-if="video?.videourl"
-                        class="player-video"
-                        :src="video?.videourl"
-                        :poster="video?.imgurl"
-                        controls
-                        playsinline
-                        webkit-playsinline
-                    />
+                    <video v-if="video?.videourl" class="player-video" :src="video?.videourl" :poster="video?.imgurl"
+                        controls playsinline webkit-playsinline />
                 </div>
 
                 <div class="info-panel">
                     <h2 class="title">{{ video?.title || pageTitle }}</h2>
                     <div class="meta-row">
-                        <span class="meta-item">时间：{{ video?.friendlyTime || formatTime(video?.publishtime) || '-' }}</span>
+                        <span class="meta-item">时间：{{ video?.friendlyTime || formatTime(video?.publishtime) || '-'
+                            }}</span>
                         <!-- <span class="meta-item">点击：{{ video?.c_num || 0 }}</span> -->
                     </div>
                     <p class="desc">{{ video?.intro || '' }}</p>
@@ -151,4 +145,3 @@ const formatTime = (ts?: number) => {
     line-height: 1.6;
 }
 </style>
-
